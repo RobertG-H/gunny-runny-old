@@ -75,10 +75,12 @@ namespace Player
 
         public void OnHorizontal(InputAction.CallbackContext context)
         {
+            if (!isLocalPlayer) { return; }
             iHorz = context.ReadValue<float>();
         }
         public void OnCharge(InputAction.CallbackContext context)
         {
+            if (!isLocalPlayer) { return; }
             Debug.Log("On Charge");
             if (context.started)//Pressed
             {
