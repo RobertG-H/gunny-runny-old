@@ -1,16 +1,23 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using Mirror;
 
-// OLD FOR TUTORIAL
-namespace QuickStart
+
+namespace Player
 {
     public class PlayerController : NetworkBehaviour
     {
+        public PlayerPhysics physics;
+        [SerializeField]
+        private PlayerJuice juice;
+        public float iHorz;
+
+
+        #region Networking vars
         public TextMesh playerNameText;
         public GameObject floatingInfo;
-
         private Material playerMaterialClone;
 
         [SyncVar(hook = nameof(OnNameChanged))]
@@ -18,7 +25,9 @@ namespace QuickStart
 
         [SyncVar(hook = nameof(OnColorChanged))]
         public Color playerColor = Color.white;
+        #endregion
 
+        #region Networking methods
         void OnNameChanged(string _Old, string _New)
         {
             playerNameText.text = playerName;
@@ -34,9 +43,6 @@ namespace QuickStart
 
         public override void OnStartLocalPlayer()
         {
-            Camera.main.transform.SetParent(transform);
-            Camera.main.transform.localPosition = new Vector3(0, 0, 0);
-
             floatingInfo.transform.localPosition = new Vector3(0, -0.3f, 0.6f);
             floatingInfo.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
 
@@ -52,6 +58,7 @@ namespace QuickStart
             playerName = _name;
             playerColor = _col;
         }
+        #endregion
 
         void Update()
         {
@@ -61,12 +68,30 @@ namespace QuickStart
                 floatingInfo.transform.LookAt(Camera.main.transform);
                 return;
             }
-
-            float moveX = Input.GetAxis("Horizontal") * Time.deltaTime * 110.0f;
-            float moveZ = (Input.GetButton("Jump") ? 1.0f : 0.0f) * Time.deltaTime * 4f;
-
-            transform.Rotate(0, moveX, 0);
-            transform.Translate(0, 0, moveZ);
         }
+
+        public void OnHorizontal(InputAction.CallbackContext context)
+        {
+            if (!isLocalPlayer) { return; }
+            iHorz = context.ReadValue<float>();
+        }
+        public void OnCharge(InputAction.CallbackContext context)
+        {
+            if (!isLocalPlayer) { return; }
+
+            if (context.started)//Pressed
+            {
+                physics.Brake();
+                if (juice)
+                    juice.OnCharge();
+            }
+            else if (context.performed)//Released
+            {
+                physics.StopBraking();
+                if (juice)
+                    juice.OnBoost();
+            }
+        }
+
     }
 }
