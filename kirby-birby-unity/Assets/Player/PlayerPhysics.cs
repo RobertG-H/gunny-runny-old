@@ -41,7 +41,7 @@ namespace Player
         }
         void FixedUpdate()
         {
-            Debug.Log(velocity);
+            Debug.Log(velocity.magnitude);
             // Update velocity and apply
             // if (gravityIsActive) ApplyGravity();
             // if (IsGrounded()) ApplyFriction();
