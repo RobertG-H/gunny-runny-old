@@ -36,8 +36,8 @@ sysinfo.txt
 *.unitypackage
 
 # Logs
-/Logs/
-/Logs.meta
+*/Logs/
+*/Logs.meta
 
 /Assets/Anima2D/
 /Assets/Anima2D.meta
