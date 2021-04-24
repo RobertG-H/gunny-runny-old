@@ -35,6 +35,10 @@ sysinfo.txt
 *.apk
 *.unitypackage
 
+# Logs
+/Logs/
+/Logs.meta
+
 /Assets/Anima2D/
 /Assets/Anima2D.meta
 /.vscode/
