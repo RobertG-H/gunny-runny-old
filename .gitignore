@@ -40,27 +40,31 @@ sysinfo.txt
 */Logs/
 */Logs.meta
 
-/Assets/Anima2D/
-/Assets/Anima2D.meta
-/.vscode/
-/Assets/TextMesh*Pro/
-/Assets/TextMesh*Pro.meta
+*/Assets/Anima2D/
+*/Assets/Anima2D.meta
+*/.vscode/
+*/Assets/TextMesh*Pro/
+*/Assets/TextMesh*Pro.meta
 
 # Astar stuff (custom package located here: https://arongranberg.com/astar/)
-/Assets/AstarPathfindingProject/
-/Assets/AstarPathfindingProject.meta
-/Assets/_TerrainAutoUpgrade/
-/Assets/_TerrainAutoUpgrade.meta
+*/Assets/AstarPathfindingProject/
+*/Assets/AstarPathfindingProject.meta
+*/Assets/_TerrainAutoUpgrade/
+*/Assets/_TerrainAutoUpgrade.meta
 
 # Panda BT stuff
-/Assets/PandaBehaviour/
-/Assets/PandaBehaviour.meta
+*/Assets/PandaBehaviour/
+*/Assets/PandaBehaviour.meta
 
 # Mirror stuff
-/Assets/Mirror/
-/Assets/Mirror.meta
-/Assets/ScriptTemplates/
-/Assets/ScriptTemplates.meta
+*/Assets/Mirror/
+*/Assets/Mirror.meta
+*/Assets/ScriptTemplates/
+*/Assets/ScriptTemplates.meta
 
-/Assets/Thirdparty/
-/Assets/Thirdparty.meta
+*/Assets/Thirdparty/
+*/Assets/Thirdparty.meta
+
+#ParrelSync
+*/Assets/ParrelSync/
+*/Assets/ParrelSync.meta
