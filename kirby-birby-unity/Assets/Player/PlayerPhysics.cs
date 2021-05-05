@@ -11,6 +11,9 @@ namespace Player
     public class PlayerPhysics : MonoBehaviour
     {
         public PlayerController p;
+
+        #region Movement properties
+        [Header("Movement properties")]
         public float acceleration;
         public float brakingAcceleration;
         public float topSpeed;
@@ -20,25 +23,27 @@ namespace Player
         public float boostAcceleration;
         public float boostTopSpeedMultiplier;
         public float maxStopAngle;
-        public Text velocityDebugText;
-        public Text facingDirDebugText;
-        public Text turnDirDebugText;
+        #endregion
+
+        #region Local state
         private bool braking;
         private float charge;
         public float chargeRate, maxCharge;
         private bool boosting;
         private IEnumerator boostTimer;
 
-        [SerializeField]
+        [ReadOnly, SerializeField]
         private Vector3 velocity = Vector3.zero;
 
-        [SerializeField]
+        [ReadOnly, SerializeField]
         private Vector3 facingDirection = Vector3.forward; //For debugging
+        #endregion
+
         private int decimals = 4;
 
         void Update()
         {
-            if (p.isClient) { return; }
+            if (!p.isServer) { return; }
             if (braking)
             {
                 charge += Mathf.Min(chargeRate * Time.deltaTime, maxCharge);
@@ -46,21 +51,12 @@ namespace Player
         }
         void FixedUpdate()
         {
-            if (p.isClient) { return; }
-
-            // if (gravityIsActive) ApplyGravity();
-            // if (IsGrounded()) ApplyFriction();
-            // ApplyFriction();
+            if (!p.isServer) { return; }
             ApplyAcceleration();
 
             Vector3 displacement = velocity * Time.fixedDeltaTime;
             ApplyMovement(displacement);
             Turn(p.iHorz);
-
-            // velocityDebugText.text = string.Format("Velocity: {0:0.00}, {1:0.00}", velocity.x, velocity.z);
-            // facingDirDebugText.text = string.Format("Facing Dir: {0:0.00}, {1:0.00}", transform.forward.x, transform.forward.z);
-
-            // if (showDebugGraphs) UpdateLogger();
         }
         private void ApplyAcceleration()
         {
@@ -102,7 +98,6 @@ namespace Player
             if (Mathf.Abs(iHorz) > 0)
             {
                 Vector3 turnDirection = Mathf.Sign(iHorz) * transform.right;
-                // turnDirDebugText.text = string.Format("Turn Dir: {0:0.00}, {1:0.00}", turnDirection.x, turnDirection.z);
                 Vector3 rotatedFacingVec = Vector3.RotateTowards(transform.forward, turnDirection, turnRate * Time.fixedDeltaTime * Mathf.Abs(iHorz), 1);
 
 
@@ -110,22 +105,12 @@ namespace Player
                 Debug.DrawLine(transform.position, transform.position + turnDirection, Color.blue);
                 Debug.DrawLine(transform.position, transform.position + rotatedFacingVec, Color.yellow);
 
-                // Quaternion rotation = Quaternion.FromToRotation(transform.forward, turnDirection);
-                // transform.rotation = Quaternion.RotateTowards(transform.rotation, rotation, );
                 transform.rotation = Quaternion.LookRotation(rotatedFacingVec, transform.up);
 
                 Vector3 rotatedVelocityVec = Vector3.RotateTowards(velocity, transform.forward, velocityTurnRate * Time.fixedDeltaTime, 1);
                 velocity = Quaternion.FromToRotation(velocity, rotatedVelocityVec) * velocity;
             }
         }
-        // public Vector2 XYZToXZ(Vector3 xyz)
-        // {
-        //     return new Vector2(xyz.x, xyz.z);
-        // }
-        // public Vector3 XZToXYZ(Vector2 xz)
-        // {
-        //     return new Vector3(xz.x, 0, xz.y);
-        // }
         public void Boost()
         {
             boosting = true;

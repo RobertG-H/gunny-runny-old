@@ -88,13 +88,10 @@ namespace Player
 
         public void OnHorizontal(InputAction.CallbackContext context)
         {
-            // if (!isLocalPlayer) { return; }
             CmdSendInputs(context.ReadValue<float>());
         }
         public void OnCharge(InputAction.CallbackContext context)
         {
-            // if (!isLocalPlayer) { return; }
-
             if (context.started)//Pressed
             {
                 CmdBrake();
