@@ -25,6 +25,9 @@ public class ReadOnlyDrawer : PropertyDrawer
             case SerializedPropertyType.Enum:
                 valueStr = prop.enumNames[prop.enumValueIndex];
                 break;
+            case SerializedPropertyType.Vector3:
+                valueStr = prop.vector3Value.ToString("0.00000");
+                break;
             default:
                 valueStr = "(not supported)";
                 break;
