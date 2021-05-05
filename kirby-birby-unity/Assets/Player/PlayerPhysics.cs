@@ -2,8 +2,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+
 namespace Player
 {
+    /// <summary>
+    /// Physics is SERVER-ONLY
+    /// </summary>
     public class PlayerPhysics : MonoBehaviour
     {
         public PlayerController p;
@@ -34,6 +38,7 @@ namespace Player
 
         void Update()
         {
+            if (p.isClient) { return; }
             if (braking)
             {
                 charge += Mathf.Min(chargeRate * Time.deltaTime, maxCharge);
@@ -41,8 +46,8 @@ namespace Player
         }
         void FixedUpdate()
         {
-            Debug.Log(velocity);
-            // Update velocity and apply
+            if (p.isClient) { return; }
+
             // if (gravityIsActive) ApplyGravity();
             // if (IsGrounded()) ApplyFriction();
             // ApplyFriction();
@@ -59,7 +64,6 @@ namespace Player
         }
         private void ApplyAcceleration()
         {
-
             if (braking)
             {
                 Vector3 deltaVel = velocity.normalized * brakingAcceleration * Time.fixedDeltaTime;

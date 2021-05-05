@@ -50,7 +50,7 @@ MonoBehaviour:
   runInBackground: 1
   autoStartServerBuild: 1
   showDebugMessages: 0
-  serverTickRate: 30
+  serverTickRate: 50
   serverBatching: 0
   serverBatchInterval: 0
   offlineScene: 

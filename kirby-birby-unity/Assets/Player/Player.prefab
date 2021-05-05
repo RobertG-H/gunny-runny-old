@@ -25,13 +25,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 297102466954199877}
-  m_LocalRotation: {x: 0.078459114, y: 0, z: 0, w: 0.99691737}
-  m_LocalPosition: {x: 0, y: 1.2, z: -3.5}
+  m_LocalRotation: {x: 0.14271532, y: -0, z: -0, w: 0.9897638}
+  m_LocalPosition: {x: 0, y: 3.61, z: -9.82}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
-  m_Father: {fileID: 7518610230670527079}
-  m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 9, y: 0, z: 0}
+  m_Father: {fileID: 5088828701833135035}
+  m_RootOrder: 2
+  m_LocalEulerAnglesHint: {x: 16.41, y: 0, z: 0}
 --- !u!20 &7993667571810248830
 Camera:
   m_ObjectHideFlags: 0
@@ -57,7 +57,7 @@ Camera:
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
-  field of view: 60
+  field of view: 75
   orthographic: 0
   orthographic size: 5
   m_Depth: 0
@@ -112,8 +112,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children:
-  - {fileID: 2264473410004346610}
+  m_Children: []
   m_Father: {fileID: 5088828701833135035}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -198,7 +197,6 @@ GameObject:
   - component: {fileID: 6106679103868452288}
   - component: {fileID: 358545420636904939}
   - component: {fileID: 8041390985806502650}
-  - component: {fileID: 8133782419264744680}
   - component: {fileID: 4138064462363009709}
   - component: {fileID: 7585905917392952147}
   m_Layer: 0
@@ -221,6 +219,7 @@ Transform:
   m_Children:
   - {fileID: 6599172484737968035}
   - {fileID: 7518610230670527079}
+  - {fileID: 2264473410004346610}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -317,10 +316,11 @@ MonoBehaviour:
   syncMode: 0
   syncInterval: 0.1
   physics: {fileID: 8041390985806502650}
-  juice: {fileID: 8133782419264744680}
+  model: {fileID: 3104029965972190299}
+  playerCamera: {fileID: 297102466954199877}
   iHorz: 0
   playerNameText: {fileID: 8756031236947488949}
-  floatingInfo: {fileID: 6798211979788622024}
+  playerNameObject: {fileID: 6798211979788622024}
   playerName: 
   playerColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!114 &8041390985806502650
@@ -352,21 +352,7 @@ MonoBehaviour:
   maxCharge: 5
   velocity: {x: 0, y: 0, z: 0}
   facingDirection: {x: 0, y: 0, z: 1}
---- !u!114 &8133782419264744680
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5088828701833135039}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5060256861f114e4cbcd6d35363f7561, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  modelAnimator: {fileID: 2760266301370948212}
-  chargeSpeed: 1
-  isEnabled: 0
+  debugBoostMode: 0
 --- !u!65 &4138064462363009709
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -394,7 +380,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   syncMode: 0
   syncInterval: 0.05
-  lerpRate: 5
+  currentVelocity: {x: 0, y: 0, z: 0}
+  lerpRate: 8
   posThreshold: 0.1
   rotThreshold: 0.1
 --- !u!1 &6798211979788622024
@@ -409,7 +396,7 @@ GameObject:
   - component: {fileID: 2266675964540412469}
   - component: {fileID: 8756031236947488949}
   m_Layer: 0
-  m_Name: FloatingInfo
+  m_Name: PlayerIdText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -423,7 +410,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6798211979788622024}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.87, z: 0}
+  m_LocalPosition: {x: 0, y: 0.58, z: 0}
   m_LocalScale: {x: -1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 5088828701833135035}
@@ -478,17 +465,17 @@ TextMesh:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6798211979788622024}
-  m_Text: 
+  m_Text: 'Player:'
   m_OffsetZ: 0
   m_CharacterSize: 1
   m_LineSpacing: 1
-  m_Anchor: 0
-  m_Alignment: 0
+  m_Anchor: 4
+  m_Alignment: 1
   m_TabSize: 4
-  m_FontSize: 0
+  m_FontSize: 12
   m_FontStyle: 0
   m_RichText: 1
-  m_Font: {fileID: 0}
+  m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
   m_Color:
     serializedVersion: 2
     rgba: 4294967295

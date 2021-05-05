@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using Mirror;
 
+/// <summary>
+/// Server sends pose of player to all clients
+/// Players update their pose from server
+/// </summary>
 public class TransformSyncInterpolate : NetworkBehaviour
 {
     [SyncVar]
@@ -12,8 +16,12 @@ public class TransformSyncInterpolate : NetworkBehaviour
     private float syncYRot;
 
     private Vector3 lastPos;
+    private Vector3 futurePos;
     private Quaternion lastRot;
-    private Transform myTransform;
+
+    [ReadOnly]
+    [SerializeField]
+    private Vector3 currentVelocity;
     [SerializeField]
     private float lerpRate = 10;
     [SerializeField]
@@ -21,50 +29,58 @@ public class TransformSyncInterpolate : NetworkBehaviour
     [SerializeField]
     private float rotThreshold = 5;
 
-    // Use this for initialization
     void Start()
     {
-        myTransform = transform;
+        lastPos = transform.position;
+        lastRot = transform.rotation;
     }
 
-    // Update is called once per frame
     void FixedUpdate()
     {
-        TransmitMotion();
+        if (isServer)
+        {
+            TransmitMotion();
+        }
+    }
+
+    void TransmitMotion()
+    {
+        if (Vector3.Distance(transform.position, lastPos) > posThreshold || Quaternion.Angle(transform.rotation, lastRot) > rotThreshold)
+        {
+            syncPos = transform.position;
+            syncYRot = transform.localEulerAngles.y;
+            RpcApplyMotion();
+        }
+    }
+
+    [ClientRpc]
+    void RpcApplyMotion()
+    {
+        UpdateVelocity();
+        CalcDeadReckoning();
         LerpMotion();
     }
 
-    [Command]
-    void Cmd_ProvidePositionToServer(Vector3 pos, float rot)
+    void UpdateVelocity()
     {
-        syncPos = pos;
-        syncYRot = rot;
+        currentVelocity = (transform.position - lastPos) / Time.fixedDeltaTime;
     }
 
-    [ClientCallback]
-    void TransmitMotion()
+    void CalcDeadReckoning()
     {
-        if (hasAuthority)
-        {
-            if (Vector3.Distance(myTransform.position, lastPos) > posThreshold || Quaternion.Angle(myTransform.rotation, lastRot) > rotThreshold)
-            {
-                Cmd_ProvidePositionToServer(myTransform.position, myTransform.localEulerAngles.y);
-
-                lastPos = myTransform.position;
-                lastRot = myTransform.rotation;
-            }
-        }
+        futurePos = syncPos + (currentVelocity * Time.fixedDeltaTime);
     }
 
     void LerpMotion()
     {
-        if (!hasAuthority)
-        {
-            myTransform.position = Vector3.Lerp(myTransform.transform.position, syncPos, Time.deltaTime * lerpRate);
+        // Save previous pose first.
+        lastPos = transform.position;
+        lastRot = transform.rotation;
 
-            Vector3 newRot = new Vector3(0, syncYRot, 0);
-            myTransform.rotation = Quaternion.Lerp(myTransform.rotation, Quaternion.Euler(newRot), Time.deltaTime * lerpRate);
-        }
+        transform.position = Vector3.Lerp(transform.position, futurePos, Time.fixedDeltaTime * lerpRate);
+        Vector3 newRot = new Vector3(0, syncYRot, 0);
+        transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.Euler(newRot), Time.fixedDeltaTime * lerpRate);
+
     }
 
 }

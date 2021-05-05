@@ -11,14 +11,18 @@ namespace Player
     {
         public PlayerPhysics physics;
         [SerializeField]
-        private PlayerJuice juice;
+        private Renderer model;
+        [SerializeField]
+        private GameObject playerCamera;
+
+        [ReadOnly]
         public float iHorz;
 
-
         #region Networking vars
+        [Header("Networking")]
         public TextMesh playerNameText;
-        public GameObject floatingInfo;
-        private Material playerMaterialClone;
+        public GameObject playerNameObject;
+        private Material playerMaterial;
 
         [SyncVar(hook = nameof(OnNameChanged))]
         public string playerName;
@@ -26,6 +30,11 @@ namespace Player
         [SyncVar(hook = nameof(OnColorChanged))]
         public Color playerColor = Color.white;
         #endregion
+
+        void Awake()
+        {
+            playerCamera.SetActive(false);
+        }
 
         #region Networking methods
         void OnNameChanged(string _Old, string _New)
@@ -36,63 +45,69 @@ namespace Player
         void OnColorChanged(Color _Old, Color _New)
         {
             playerNameText.color = _New;
-            playerMaterialClone = new Material(GetComponent<Renderer>().material);
-            playerMaterialClone.color = _New;
-            GetComponent<Renderer>().material = playerMaterialClone;
+            playerMaterial = new Material(model.material);
+            playerMaterial.color = _New;
+            model.material = playerMaterial;
         }
 
         public override void OnStartLocalPlayer()
         {
-            //Disabled until figure out how to config when model is not on current gameObject
-
-            // floatingInfo.transform.localPosition = new Vector3(0, -0.3f, 0.6f);
-            // floatingInfo.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
-
-            // string name = "Player" + Random.Range(100, 999);
-            // Color color = new Color(Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f));
-            // CmdSetupPlayer(name, color);
+            string name = "Player" + Random.Range(100, 999);
+            Color color = new Color(Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f));
+            CmdSetupPlayer(name, color);
+            InitializeCamera();
         }
 
         [Command]
-        public void CmdSetupPlayer(string _name, Color _col)
+        public void CmdSetupPlayer(string name, Color color)
         {
-            // player info sent to server, then server updates sync vars which handles it on all clients
-            playerName = _name;
-            playerColor = _col;
+            playerName = name;
+            playerColor = color;
+        }
+
+        [Command]
+        void CmdSendInputs(float iHorz)
+        {
+            this.iHorz = iHorz;
+        }
+
+        [Command]
+        void CmdBrake()
+        {
+            physics.Brake();
+        }
+
+        [Command]
+        void CmdStopBraking()
+        {
+            physics.StopBraking();
+
         }
         #endregion
 
-        void Update()
-        {
-            if (!isLocalPlayer)
-            {
-                // make non-local players run this
-                floatingInfo.transform.LookAt(Camera.main.transform);
-                return;
-            }
-        }
 
         public void OnHorizontal(InputAction.CallbackContext context)
         {
-            if (!isLocalPlayer) { return; }
-            iHorz = context.ReadValue<float>();
+            // if (!isLocalPlayer) { return; }
+            CmdSendInputs(context.ReadValue<float>());
         }
         public void OnCharge(InputAction.CallbackContext context)
         {
-            if (!isLocalPlayer) { return; }
+            // if (!isLocalPlayer) { return; }
 
             if (context.started)//Pressed
             {
-                physics.Brake();
-                if (juice)
-                    juice.OnCharge();
+                CmdBrake();
             }
             else if (context.performed)//Released
             {
-                physics.StopBraking();
-                if (juice)
-                    juice.OnBoost();
+                CmdStopBraking();
             }
+        }
+
+        private void InitializeCamera()
+        {
+            playerCamera.SetActive(true);
         }
 
     }
