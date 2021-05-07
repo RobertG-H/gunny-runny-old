@@ -5,12 +5,28 @@ using UnityEngine.UI;
 
 namespace Player
 {
+    public static class LayerMaskConfig
+    {
+        public static int DEFAULT;
+
+        public static void initConfig()
+        {
+            //Layers that the player should ignore
+            DEFAULT = 1 << LayerMask.NameToLayer("Player");
+            DEFAULT += 1 << LayerMask.NameToLayer("Ignore Raycast");
+            DEFAULT = ~DEFAULT;
+        }
+
+    }
+
     /// <summary>
     /// Physics is SERVER-ONLY
     /// </summary>
     public class PlayerPhysics : MonoBehaviour
     {
         public PlayerController p;
+        [SerializeField]
+        BoxCollider ECB;
 
         #region Movement properties
         [Header("Movement properties")]
@@ -39,7 +55,21 @@ namespace Player
         private Vector3 facingDirection = Vector3.forward; //For debugging
         #endregion
 
+        #region Raycasting and Collision Variables
+        public RaycastOrigins raycastOrigins;
+
+        //From perspective of looking AT the player from the front
+        public struct RaycastOrigins
+        {
+            public Vector3 frontBottomLeft, frontBottomRight;
+        }
+        #endregion
         private int decimals = 4;
+
+        void Awake()
+        {
+            LayerMaskConfig.initConfig();
+        }
 
         void Update()
         {
@@ -88,11 +118,100 @@ namespace Player
         }
         private void ApplyMovement(Vector3 displacement)
         {
+            UpdateRaycastOrigins();
+            HorizontalCollisions(ref displacement);
+
             gameObject.transform.Translate(new Vector3((float)System.Math.Round(displacement.x, decimals),
             (float)System.Math.Round(displacement.y, decimals),
             (float)System.Math.Round(displacement.z, decimals)),
             relativeTo: Space.World);
         }
+
+        #region Raycasting
+
+        void UpdateRaycastOrigins()
+        {
+
+            Bounds bounds = ECB.bounds;
+            Vector3[] vertices = GetColliderVertexPositions();
+            raycastOrigins.frontBottomLeft = vertices[2];
+            raycastOrigins.frontBottomRight = vertices[3];
+        }
+
+        /// <summary>
+        /// Get box collider vertex positions in global coordinates.
+        /// Order starts in the front-top-right corner
+        /// Proceeds in counter-clockwise direction on the front face.
+        /// Point 5 starts in the back-top-right corner
+        /// Proceeds in counter-clockwise direction on the back face.
+        /// </summary>
+        /// <returns>Vector3 array of size 8</returns>
+        Vector3[] GetColliderVertexPositions()
+        {
+            Vector3[] vertices = new Vector3[8];
+            Vector3 size = ECB.size * 0.5f;
+            Matrix4x4 thisMatrix = Matrix4x4.TRS(ECB.bounds.center, ECB.transform.localRotation, ECB.transform.localScale);
+            vertices[0] = thisMatrix.MultiplyPoint3x4(new Vector3(size.x, size.y, size.z));
+            vertices[1] = thisMatrix.MultiplyPoint3x4(new Vector3(-size.x, size.y, size.z));
+            vertices[2] = thisMatrix.MultiplyPoint3x4(new Vector3(size.x, -size.y, size.z));
+            vertices[3] = thisMatrix.MultiplyPoint3x4(new Vector3(-size.x, -size.y, size.z));
+            vertices[4] = thisMatrix.MultiplyPoint3x4(new Vector3(size.x, size.y, -size.z));
+            vertices[5] = thisMatrix.MultiplyPoint3x4(new Vector3(-size.x, size.y, -size.z));
+            vertices[6] = thisMatrix.MultiplyPoint3x4(new Vector3(size.x, -size.y, -size.z));
+            vertices[7] = thisMatrix.MultiplyPoint3x4(new Vector3(-size.x, -size.y, -size.z));
+
+            return vertices;
+        }
+
+        // void OnDrawGizmos()
+        // {
+        //     Vector3[] vertices = new Vector3[8];
+        //     Vector3 size = ECB.size * 0.5f;
+        //     Matrix4x4 thisMatrix = Matrix4x4.TRS(ECB.bounds.center, ECB.transform.localRotation, ECB.transform.localScale);
+        //     vertices[0] = thisMatrix.MultiplyPoint3x4(new Vector3(size.x, size.y, size.z));
+        //     vertices[1] = thisMatrix.MultiplyPoint3x4(new Vector3(-size.x, size.y, size.z));
+        //     vertices[2] = thisMatrix.MultiplyPoint3x4(new Vector3(size.x, -size.y, size.z));
+        //     vertices[3] = thisMatrix.MultiplyPoint3x4(new Vector3(-size.x, -size.y, size.z));
+        //     vertices[4] = thisMatrix.MultiplyPoint3x4(new Vector3(size.x, size.y, -size.z));
+        //     vertices[5] = thisMatrix.MultiplyPoint3x4(new Vector3(-size.x, size.y, -size.z));
+        //     vertices[6] = thisMatrix.MultiplyPoint3x4(new Vector3(size.x, -size.y, -size.z));
+        //     vertices[7] = thisMatrix.MultiplyPoint3x4(new Vector3(-size.x, -size.y, -size.z));
+
+        //     Gizmos.color = Color.green;
+        //     Gizmos.DrawSphere(vertices[2], 0.03f);
+        //     Gizmos.DrawLine(vertices[2], vertices[2] + velocity * Time.fixedDeltaTime);
+
+        //     Gizmos.DrawSphere(vertices[3], 0.03f);
+        //     Gizmos.DrawLine(vertices[3], vertices[3] + velocity * Time.fixedDeltaTime);
+        // }
+
+        void HorizontalCollisions(ref Vector3 displacement)
+        {
+            Vector3 rayOrigin = raycastOrigins.frontBottomLeft;
+            Debug.DrawRay(rayOrigin, displacement, Color.red);
+            RaycastHit hit;
+
+            if (Physics.Raycast(rayOrigin, displacement.normalized, out hit, displacement.magnitude, LayerMaskConfig.DEFAULT))
+            {
+                Vector3 displacementToSubtract = hit.normal * displacement.magnitude;
+                // displacement += displacementToSubtract;
+                displacement = Vector3.zero;
+                Debug.Log("L HIT");
+            }
+            rayOrigin = raycastOrigins.frontBottomRight;
+            Debug.DrawRay(rayOrigin, displacement, Color.red);
+
+            if (Physics.Raycast(rayOrigin, displacement.normalized, out hit, displacement.magnitude, LayerMaskConfig.DEFAULT))
+            {
+                Vector3 displacementToSubtract = hit.normal * displacement.magnitude;
+                // displacement += displacementToSubtract;
+                displacement = Vector3.zero;
+                Debug.Log("R HIT");
+            }
+        }
+
+        #endregion
+
         public void Turn(float iHorz)
         {
             if (Mathf.Abs(iHorz) > 0)
