@@ -25,13 +25,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 297102466954199877}
-  m_LocalRotation: {x: 0.07350383, y: 0.84839314, z: -0.122330904, w: 0.5097661}
-  m_LocalPosition: {x: -1.33, y: 0.51, z: 0.9}
+  m_LocalRotation: {x: 0.76995665, y: 0, z: 0, w: 0.6380963}
+  m_LocalPosition: {x: 0, y: 1.3, z: 0.4}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 5088828701833135035}
-  m_RootOrder: 2
-  m_LocalEulerAnglesHint: {x: 16.41, y: 118, z: 0}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 100.7, y: 0, z: 0}
 --- !u!20 &7993667571810248830
 Camera:
   m_ObjectHideFlags: 0
@@ -101,7 +101,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &7518610230670527079
 Transform:
   m_ObjectHideFlags: 0
@@ -109,12 +109,12 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1857100552428363776}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
-  m_Father: {fileID: 5088828701833135035}
-  m_RootOrder: 1
+  m_Father: {fileID: 5375794110142889907}
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!95 &2760266301370948212
 Animator:
@@ -184,6 +184,37 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &2388911875820502405
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5375794110142889907}
+  m_Layer: 6
+  m_Name: LocalBasisVectors
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5375794110142889907
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2388911875820502405}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 7518610230670527079}
+  m_Father: {fileID: 5088828701833135035}
+  m_RootOrder: 3
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &4735898125690515171
 GameObject:
   m_ObjectHideFlags: 0
@@ -193,7 +224,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3330487914702537974}
-  - component: {fileID: 4979859636935897879}
+  - component: {fileID: 1150392449789306317}
   m_Layer: 6
   m_Name: ECB
   m_TagString: Untagged
@@ -213,10 +244,10 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 5088828701833135035}
-  m_RootOrder: 3
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &4979859636935897879
-BoxCollider:
+--- !u!136 &1150392449789306317
+CapsuleCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -225,8 +256,9 @@ BoxCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 1, y: 1, z: 1}
+  m_Radius: 0.5
+  m_Height: 1
+  m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &5088828701833135039
 GameObject:
@@ -261,9 +293,9 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 6599172484737968035}
-  - {fileID: 7518610230670527079}
   - {fileID: 2264473410004346610}
   - {fileID: 3330487914702537974}
+  - {fileID: 5375794110142889907}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -343,7 +375,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   sceneId: 0
   serverOnly: 0
-  m_AssetId: 
+  m_AssetId: fd8bca6bd32d5a6488957636faf8b168
   hasSpawned: 0
 --- !u!114 &358545420636904939
 MonoBehaviour:
@@ -380,20 +412,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   p: {fileID: 358545420636904939}
-  ECB: {fileID: 4979859636935897879}
+  ECB: {fileID: 1150392449789306317}
+  localBasisVectors: {fileID: 5375794110142889907}
   acceleration: 10
   brakingAcceleration: -30
-  topSpeed: 5
+  topSpeed: 10
   turnRate: 2
   velocityTurnRate: 1
   boostDuration: 1
   boostAcceleration: 50
   boostTopSpeedMultiplier: 2
   maxStopAngle: 45
+  SKIN_WIDTH: 0.02
   chargeRate: 2
   maxCharge: 5
   velocity: {x: 0, y: 0, z: 0}
-  facingDirection: {x: 0, y: 0, z: 1}
 --- !u!114 &7585905917392952147
 MonoBehaviour:
   m_ObjectHideFlags: 0
