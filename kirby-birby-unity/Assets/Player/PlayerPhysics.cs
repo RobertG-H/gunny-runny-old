@@ -26,7 +26,7 @@ namespace Player
     {
         public PlayerController p;
         [SerializeField]
-        Collider ECB;
+        CapsuleCollider ECB;
 
         [SerializeField]
         Transform localBasisVectors;
@@ -65,8 +65,7 @@ namespace Player
         //From perspective of looking FROM the player's perspective
         public struct RaycastOrigins
         {
-            public Vector3 frontBottomLeft, frontBottomRight;
-            public Vector3 front, back, right, left;
+            public Vector3 center;
         }
         #endregion
         private int decimals = 8;
@@ -139,110 +138,61 @@ namespace Player
 
         void UpdateRaycastOrigins()
         {
-
             Bounds bounds = ECB.bounds;
-            bounds.Expand(SKIN_WIDTH * -2);
-            raycastOrigins.front = new Vector3(bounds.max.x - bounds.size.x / 2, bounds.max.y - bounds.size.y / 2, bounds.max.z);
-            raycastOrigins.back = new Vector3(bounds.max.x - bounds.size.x / 2, bounds.max.y - bounds.size.y / 2, bounds.min.z);
-            raycastOrigins.right = new Vector3(bounds.max.x, bounds.max.y - bounds.size.y / 2, bounds.max.z - bounds.size.z / 2);
-            raycastOrigins.left = new Vector3(bounds.min.x, bounds.max.y - bounds.size.y / 2, bounds.max.z - bounds.size.z / 2);
-
-            // Vector3[] vertices = GetColliderVertexPositions();
-            // raycastOrigins.frontBottomLeft = vertices[2];
-            // raycastOrigins.frontBottomRight = vertices[3];
+            raycastOrigins.center = bounds.center;
         }
-
-        /// <summary>
-        /// Get box collider vertex positions in global coordinates.
-        /// Order starts in the front-top-right corner
-        /// Proceeds in counter-clockwise direction on the front face.
-        /// Point 5 starts in the back-top-right corner
-        /// Proceeds in counter-clockwise direction on the back face.
-        /// </summary>
-        /// <returns>Vector3 array of size 8</returns>
-        Vector3[] GetColliderVertexPositions()
-        {
-            Vector3[] vertices = new Vector3[8];
-            // Vector3 size = ECB.size * 0.5f;
-            // Matrix4x4 thisMatrix = Matrix4x4.TRS(ECB.bounds.center, ECB.transform.localRotation, ECB.transform.localScale);
-            // vertices[0] = thisMatrix.MultiplyPoint3x4(new Vector3(size.x, size.y, size.z));
-            // vertices[1] = thisMatrix.MultiplyPoint3x4(new Vector3(-size.x, size.y, size.z));
-            // vertices[2] = thisMatrix.MultiplyPoint3x4(new Vector3(size.x, -size.y, size.z));
-            // vertices[3] = thisMatrix.MultiplyPoint3x4(new Vector3(-size.x, -size.y, size.z));
-            // vertices[4] = thisMatrix.MultiplyPoint3x4(new Vector3(size.x, size.y, -size.z));
-            // vertices[5] = thisMatrix.MultiplyPoint3x4(new Vector3(-size.x, size.y, -size.z));
-            // vertices[6] = thisMatrix.MultiplyPoint3x4(new Vector3(size.x, -size.y, -size.z));
-            // vertices[7] = thisMatrix.MultiplyPoint3x4(new Vector3(-size.x, -size.y, -size.z));
-
-            return vertices;
-        }
-
-        // void OnDrawGizmos()
-        // {
-        //     Vector3[] vertices = new Vector3[8];
-        //     Vector3 size = ECB.size * 0.5f;
-        //     Matrix4x4 thisMatrix = Matrix4x4.TRS(ECB.bounds.center, ECB.transform.localRotation, ECB.transform.localScale);
-        //     vertices[0] = thisMatrix.MultiplyPoint3x4(new Vector3(size.x, size.y, size.z));
-        //     vertices[1] = thisMatrix.MultiplyPoint3x4(new Vector3(-size.x, size.y, size.z));
-        //     vertices[2] = thisMatrix.MultiplyPoint3x4(new Vector3(size.x, -size.y, size.z));
-        //     vertices[3] = thisMatrix.MultiplyPoint3x4(new Vector3(-size.x, -size.y, size.z));
-        //     vertices[4] = thisMatrix.MultiplyPoint3x4(new Vector3(size.x, size.y, -size.z));
-        //     vertices[5] = thisMatrix.MultiplyPoint3x4(new Vector3(-size.x, size.y, -size.z));
-        //     vertices[6] = thisMatrix.MultiplyPoint3x4(new Vector3(size.x, -size.y, -size.z));
-        //     vertices[7] = thisMatrix.MultiplyPoint3x4(new Vector3(-size.x, -size.y, -size.z));
-
-        //     Gizmos.color = Color.green;
-        //     Gizmos.DrawSphere(vertices[2], 0.03f);
-        //     Gizmos.DrawLine(vertices[2], vertices[2] + velocity * Time.fixedDeltaTime);
-
-        //     Gizmos.DrawSphere(vertices[3], 0.03f);
-        //     Gizmos.DrawLine(vertices[3], vertices[3] + velocity * Time.fixedDeltaTime);
-        // }
 
         Vector3 HorizontalCollisions(Vector3 displacement)
         {
             Vector3 newDisplacement;
-            if (TryRaycast(raycastOrigins.front, displacement.normalized, displacement.magnitude, out newDisplacement))
+            if (TryRaycast(raycastOrigins.center, displacement.normalized, displacement.magnitude, out newDisplacement, 0))
             {
-                return newDisplacement;
+                if (newDisplacement.magnitude < displacement.magnitude)
+                    displacement = newDisplacement;
             }
-            else if (TryRaycast(raycastOrigins.back, displacement.normalized, displacement.magnitude, out newDisplacement))
-            {
-                return newDisplacement;
 
-            }
-            else if (TryRaycast(raycastOrigins.left, displacement.normalized, displacement.magnitude, out newDisplacement))
+            float theta = 45;
+            Vector3 newDirection = Quaternion.AngleAxis(theta, localBasisVectors.up) * displacement.normalized;
+            float newMag = displacement.magnitude * Mathf.Cos(Mathf.Deg2Rad * theta);
+            if (TryRaycast(raycastOrigins.center, newDirection, newMag, out newDisplacement, theta))
             {
-                return newDisplacement;
+                if (newDisplacement.magnitude < displacement.magnitude)
+                    displacement = newDisplacement;
+            }
 
-            }
-            else if (TryRaycast(raycastOrigins.right, displacement.normalized, displacement.magnitude, out newDisplacement))
+            theta = -45;
+            newDirection = Quaternion.AngleAxis(theta, localBasisVectors.up) * displacement.normalized;
+            newMag = displacement.magnitude * Mathf.Cos(Mathf.Deg2Rad * theta);
+            if (TryRaycast(raycastOrigins.center, newDirection, newMag, out newDisplacement, theta))
             {
-                return newDisplacement;
+                if (newDisplacement.magnitude < displacement.magnitude)
+                    displacement = newDisplacement;
             }
             return displacement;
         }
 
-        bool TryRaycast(Vector3 rayOrigin, Vector3 rayDir, float rayMag, out Vector3 newDisplacement)
+        bool TryRaycast(Vector3 rayOrigin, Vector3 rayDir, float rayMag, out Vector3 newDisplacement, float theta = 0)
         {
             if (rayMag < SKIN_WIDTH)
             {
                 rayMag = 2 * SKIN_WIDTH;
             }
             rayMag += SKIN_WIDTH;
+            rayMag += ECB.radius;
             RaycastHit hit;
             if (Physics.Raycast(rayOrigin, rayDir, out hit, rayMag, LayerMaskConfig.DEFAULT))
             {
                 Debug.DrawRay(rayOrigin, rayDir * rayMag, Color.red);
                 Debug.Log(string.Format("Hit distance: {0} and displacement: {1} new movement: {2}", hit.distance, rayDir * rayMag, hit.distance - SKIN_WIDTH));
 
-                if (hit.distance - SKIN_WIDTH < 0.001)
+                if (hit.distance - SKIN_WIDTH - ECB.radius < 0.001)
                 {
                     Debug.Log("Zero hit distance");
                     newDisplacement = Vector3.zero;
                     return true;
                 }
-                newDisplacement = (hit.distance - SKIN_WIDTH) * rayDir;
+                float directionalDistance = (hit.distance - SKIN_WIDTH - ECB.radius);
+                newDisplacement = (directionalDistance / Mathf.Cos(Mathf.Deg2Rad * theta)) * rayDir;
                 return true;
             }
             Debug.DrawRay(rayOrigin, rayDir * rayMag, Color.green);
@@ -260,9 +210,9 @@ namespace Player
                 Vector3 rotatedFacingVec = Vector3.RotateTowards(localBasisVectors.forward, turnDirection, turnRate * Time.fixedDeltaTime * Mathf.Abs(iHorz), 1);
 
 
-                Debug.DrawLine(transform.position, transform.position + localBasisVectors.forward, Color.red);
-                Debug.DrawLine(transform.position, transform.position + turnDirection, Color.blue);
-                Debug.DrawLine(transform.position, transform.position + rotatedFacingVec, Color.yellow);
+                // Debug.DrawLine(transform.position, transform.position + localBasisVectors.forward, Color.red);
+                // Debug.DrawLine(transform.position, transform.position + turnDirection, Color.blue);
+                // Debug.DrawLine(transform.position, transform.position + rotatedFacingVec, Color.yellow);
 
                 localBasisVectors.rotation = Quaternion.LookRotation(rotatedFacingVec, localBasisVectors.up);
 
