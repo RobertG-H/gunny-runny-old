@@ -45,7 +45,8 @@ namespace Player
         #endregion
 
         #region Raycasting Properties
-        public float SKIN_WIDTH = 0.02f;
+        private float SKIN_WIDTH = 0.02f;
+        private float MINIMUM_MOVE_THRESHOLD = 0.001f;
         #endregion
 
         #region Local state
@@ -122,13 +123,7 @@ namespace Player
         {
             UpdateRaycastOrigins();
             displacement = HorizontalCollisions(displacement);
-
-
-            if (displacement == Vector3.zero)
-            {
-                Debug.Log("Not moving");
-            }
-            Debug.Log(string.Format("Moving: {0}", (float)System.Math.Round(displacement.z, decimals)));
+            // Debug.Log(string.Format("Moving: {0}", displacement.z));
             gameObject.transform.position += new Vector3((float)System.Math.Round(displacement.x, decimals),
             (float)System.Math.Round(displacement.y, decimals),
             (float)System.Math.Round(displacement.z, decimals));
@@ -144,8 +139,11 @@ namespace Player
 
         Vector3 HorizontalCollisions(Vector3 displacement)
         {
+            // check in 3 directions
+            // Move the smallest distance
             Vector3 newDisplacement;
-            if (TryRaycast(raycastOrigins.center, displacement.normalized, displacement.magnitude, out newDisplacement, 0))
+            Vector3[] hitNormals = new Vector3[3];
+            if (CheckRaycast(raycastOrigins.center, displacement.normalized, displacement.magnitude, out newDisplacement, out hitNormals[0], 0))
             {
                 if (newDisplacement.magnitude < displacement.magnitude)
                     displacement = newDisplacement;
@@ -154,7 +152,7 @@ namespace Player
             float theta = 45;
             Vector3 newDirection = Quaternion.AngleAxis(theta, localBasisVectors.up) * displacement.normalized;
             float newMag = displacement.magnitude * Mathf.Cos(Mathf.Deg2Rad * theta);
-            if (TryRaycast(raycastOrigins.center, newDirection, newMag, out newDisplacement, theta))
+            if (CheckRaycast(raycastOrigins.center, newDirection, newMag, out newDisplacement, out hitNormals[0], theta))
             {
                 if (newDisplacement.magnitude < displacement.magnitude)
                     displacement = newDisplacement;
@@ -163,40 +161,57 @@ namespace Player
             theta = -45;
             newDirection = Quaternion.AngleAxis(theta, localBasisVectors.up) * displacement.normalized;
             newMag = displacement.magnitude * Mathf.Cos(Mathf.Deg2Rad * theta);
-            if (TryRaycast(raycastOrigins.center, newDirection, newMag, out newDisplacement, theta))
+            if (CheckRaycast(raycastOrigins.center, newDirection, newMag, out newDisplacement, out hitNormals[0], theta))
             {
                 if (newDisplacement.magnitude < displacement.magnitude)
                     displacement = newDisplacement;
             }
+
+            // Check sliding based on normals of all detected collisions
+            for (int i = 0; i < hitNormals.Length; i++)
+            {
+                // Remove all normal to the wall components of newDisplacement
+                displacement = displacement - Vector3.Project(displacement, hitNormals[i]);
+                Debug.DrawRay(ECB.bounds.center, displacement, Color.blue);
+            }
+
+
+
             return displacement;
         }
 
-        bool TryRaycast(Vector3 rayOrigin, Vector3 rayDir, float rayMag, out Vector3 newDisplacement, float theta = 0)
+        bool CheckRaycast(Vector3 rayOrigin, Vector3 rayDir, float rayMag, out Vector3 newDisplacement, out Vector3 hitNormal, float theta = 0)
         {
-            if (rayMag < SKIN_WIDTH)
-            {
-                rayMag = 2 * SKIN_WIDTH;
-            }
+            Vector3 displacement = rayDir * rayMag;
             rayMag += SKIN_WIDTH;
             rayMag += ECB.radius;
             RaycastHit hit;
             if (Physics.Raycast(rayOrigin, rayDir, out hit, rayMag, LayerMaskConfig.DEFAULT))
             {
+                hitNormal = hit.normal;
                 Debug.DrawRay(rayOrigin, rayDir * rayMag, Color.red);
-                Debug.Log(string.Format("Hit distance: {0} and displacement: {1} new movement: {2}", hit.distance, rayDir * rayMag, hit.distance - SKIN_WIDTH));
+                //Debug.Log(string.Format("Hit distance: {0} and displacement: {1} new movement: {2}", hit.distance, rayDir * rayMag, rayDir * rayMag - Vector3.Project(rayDir * rayMag, hit.normal)));
 
-                if (hit.distance - SKIN_WIDTH - ECB.radius < 0.001)
+                // Player is very close to the wall
+                if (hit.distance - SKIN_WIDTH - ECB.radius < MINIMUM_MOVE_THRESHOLD)
                 {
-                    Debug.Log("Zero hit distance");
                     newDisplacement = Vector3.zero;
                     return true;
                 }
+
+                // Find the component of the ray in the displacement vector. 
                 float directionalDistance = (hit.distance - SKIN_WIDTH - ECB.radius);
                 newDisplacement = (directionalDistance / Mathf.Cos(Mathf.Deg2Rad * theta)) * rayDir;
+
+                //applyingSliding
+
                 return true;
             }
+
             Debug.DrawRay(rayOrigin, rayDir * rayMag, Color.green);
-            newDisplacement = rayDir * rayMag;
+
+            newDisplacement = displacement;
+            hitNormal = Vector3.zero;
             return false;
         }
 

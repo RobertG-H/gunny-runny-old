@@ -375,7 +375,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   sceneId: 0
   serverOnly: 0
-  m_AssetId: fd8bca6bd32d5a6488957636faf8b168
+  m_AssetId: 
   hasSpawned: 0
 --- !u!114 &358545420636904939
 MonoBehaviour:
@@ -416,7 +416,7 @@ MonoBehaviour:
   localBasisVectors: {fileID: 5375794110142889907}
   acceleration: 10
   brakingAcceleration: -30
-  topSpeed: 10
+  topSpeed: 1
   turnRate: 2
   velocityTurnRate: 1
   boostDuration: 1
