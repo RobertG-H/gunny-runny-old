@@ -124,6 +124,7 @@ namespace Player
             UpdateRaycastOrigins();
             displacement = HorizontalCollisions(displacement);
             // Debug.Log(string.Format("Moving: {0}", displacement.z));
+            Debug.DrawRay(raycastOrigins.center, displacement, Color.blue);
             gameObject.transform.position += new Vector3((float)System.Math.Round(displacement.x, decimals),
             (float)System.Math.Round(displacement.y, decimals),
             (float)System.Math.Round(displacement.z, decimals));
@@ -139,80 +140,49 @@ namespace Player
 
         Vector3 HorizontalCollisions(Vector3 displacement)
         {
-            // check in 3 directions
-            // Move the smallest distance
-            Vector3 newDisplacement;
-            Vector3[] hitNormals = new Vector3[3];
-            if (CheckRaycast(raycastOrigins.center, displacement.normalized, displacement.magnitude, out newDisplacement, out hitNormals[0], 0))
-            {
-                if (newDisplacement.magnitude < displacement.magnitude)
-                    displacement = newDisplacement;
-            }
+            Vector3 originalDisplacement = displacement;
+            CheckRaycast(raycastOrigins.center, displacement.normalized, displacement.magnitude, ref displacement, 0);
 
             float theta = 45;
-            Vector3 newDirection = Quaternion.AngleAxis(theta, localBasisVectors.up) * displacement.normalized;
+            Vector3 newDirection = Quaternion.AngleAxis(theta, localBasisVectors.up) * originalDisplacement.normalized;
             float newMag = displacement.magnitude * Mathf.Cos(Mathf.Deg2Rad * theta);
-            if (CheckRaycast(raycastOrigins.center, newDirection, newMag, out newDisplacement, out hitNormals[0], theta))
-            {
-                if (newDisplacement.magnitude < displacement.magnitude)
-                    displacement = newDisplacement;
-            }
+            CheckRaycast(raycastOrigins.center, newDirection, newMag, ref displacement, theta);
 
             theta = -45;
-            newDirection = Quaternion.AngleAxis(theta, localBasisVectors.up) * displacement.normalized;
+            newDirection = Quaternion.AngleAxis(theta, localBasisVectors.up) * originalDisplacement.normalized;
             newMag = displacement.magnitude * Mathf.Cos(Mathf.Deg2Rad * theta);
-            if (CheckRaycast(raycastOrigins.center, newDirection, newMag, out newDisplacement, out hitNormals[0], theta))
-            {
-                if (newDisplacement.magnitude < displacement.magnitude)
-                    displacement = newDisplacement;
-            }
+            CheckRaycast(raycastOrigins.center, newDirection, newMag, ref displacement, theta);
 
-            // Check sliding based on normals of all detected collisions
-            for (int i = 0; i < hitNormals.Length; i++)
-            {
-                // Remove all normal to the wall components of newDisplacement
-                displacement = displacement - Vector3.Project(displacement, hitNormals[i]);
-                Debug.DrawRay(ECB.bounds.center, displacement, Color.blue);
-            }
-
-
-
+            if (displacement.magnitude < MINIMUM_MOVE_THRESHOLD)
+                return Vector3.zero;
             return displacement;
         }
 
-        bool CheckRaycast(Vector3 rayOrigin, Vector3 rayDir, float rayMag, out Vector3 newDisplacement, out Vector3 hitNormal, float theta = 0)
+        void CheckRaycast(Vector3 rayOrigin, Vector3 rayDir, float rayMag, ref Vector3 displacement, float theta = 0)
         {
-            Vector3 displacement = rayDir * rayMag;
             rayMag += SKIN_WIDTH;
             rayMag += ECB.radius;
             RaycastHit hit;
             if (Physics.Raycast(rayOrigin, rayDir, out hit, rayMag, LayerMaskConfig.DEFAULT))
             {
-                hitNormal = hit.normal;
                 Debug.DrawRay(rayOrigin, rayDir * rayMag, Color.red);
                 //Debug.Log(string.Format("Hit distance: {0} and displacement: {1} new movement: {2}", hit.distance, rayDir * rayMag, rayDir * rayMag - Vector3.Project(rayDir * rayMag, hit.normal)));
 
-                // Player is very close to the wall
-                if (hit.distance - SKIN_WIDTH - ECB.radius < MINIMUM_MOVE_THRESHOLD)
-                {
-                    newDisplacement = Vector3.zero;
-                    return true;
-                }
+                float distFromEdgeToWall = hit.distance - SKIN_WIDTH - ECB.radius;
+                float distFromEdgeToWall_dispComponent = (distFromEdgeToWall / Mathf.Cos(Mathf.Deg2Rad * theta));
+                float distInTheWall = displacement.magnitude - distFromEdgeToWall_dispComponent;
 
-                // Find the component of the ray in the displacement vector. 
-                float directionalDistance = (hit.distance - SKIN_WIDTH - ECB.radius);
-                newDisplacement = (directionalDistance / Mathf.Cos(Mathf.Deg2Rad * theta)) * rayDir;
+                // Remove this so that the player doesn't move into the wall.
+                Vector3 inWallMovement = Vector3.Project(distInTheWall * rayDir, hit.normal);
 
-                //applyingSliding
-
-                return true;
+                // This removes the component normal to the wall.
+                // Only want to remove the portion that would cause you to go into the wall
+                displacement -= inWallMovement;
             }
-
-            Debug.DrawRay(rayOrigin, rayDir * rayMag, Color.green);
-
-            newDisplacement = displacement;
-            hitNormal = Vector3.zero;
-            return false;
+            else
+            {
+                Debug.DrawRay(rayOrigin, rayDir * rayMag, Color.green);
+            }
         }
 
         #endregion
