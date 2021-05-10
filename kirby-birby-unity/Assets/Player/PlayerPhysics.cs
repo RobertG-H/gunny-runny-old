@@ -5,12 +5,31 @@ using UnityEngine.UI;
 
 namespace Player
 {
+    public static class LayerMaskConfig
+    {
+        public static int DEFAULT;
+
+        public static void initConfig()
+        {
+            //Layers that the player should ignore
+            DEFAULT = 1 << LayerMask.NameToLayer("Player");
+            DEFAULT += 1 << LayerMask.NameToLayer("Ignore Raycast");
+            DEFAULT = ~DEFAULT;
+        }
+
+    }
+
     /// <summary>
     /// Physics is SERVER-ONLY
     /// </summary>
     public class PlayerPhysics : MonoBehaviour
     {
         public PlayerController p;
+        [SerializeField]
+        CapsuleCollider ECB;
+
+        [SerializeField]
+        Transform localBasisVectors;
 
         #region Movement properties
         [Header("Movement properties")]
@@ -25,6 +44,11 @@ namespace Player
         public float maxStopAngle;
         #endregion
 
+        #region Raycasting Properties
+        private float SKIN_WIDTH = 0.02f;
+        private float MINIMUM_MOVE_THRESHOLD = 0.01f;
+        #endregion
+
         #region Local state
         private bool braking;
         private float charge;
@@ -34,12 +58,23 @@ namespace Player
 
         [ReadOnly, SerializeField]
         private Vector3 velocity = Vector3.zero;
-
-        [ReadOnly, SerializeField]
-        private Vector3 facingDirection = Vector3.forward; //For debugging
         #endregion
 
-        private int decimals = 4;
+        #region Raycasting and Collision Variables
+        public RaycastOrigins raycastOrigins;
+
+        //From perspective of looking FROM the player's perspective
+        public struct RaycastOrigins
+        {
+            public Vector3 center;
+        }
+        #endregion
+        private int decimals = 8;
+
+        void Awake()
+        {
+            LayerMaskConfig.initConfig();
+        }
 
         void Update()
         {
@@ -55,8 +90,8 @@ namespace Player
             ApplyAcceleration();
 
             Vector3 displacement = velocity * Time.fixedDeltaTime;
-            ApplyMovement(displacement);
             Turn(p.iHorz);
+            ApplyMovement(displacement);
         }
         private void ApplyAcceleration()
         {
@@ -74,7 +109,7 @@ namespace Player
                     accelToUse = charge * boostAcceleration;
                     topSpeedToUse = topSpeed * boostTopSpeedMultiplier;
                 }
-                Vector3 deltaVel = transform.forward * accelToUse * Time.fixedDeltaTime;
+                Vector3 deltaVel = localBasisVectors.forward * accelToUse * Time.fixedDeltaTime;
                 velocity += deltaVel;
 
                 Vector3 xzVel = new Vector3(velocity.x, 0, velocity.z);
@@ -83,31 +118,132 @@ namespace Player
                     velocity = xzVel.normalized * topSpeedToUse + new Vector3(0, velocity.y, 0);
                 }
             }
-
-            facingDirection = transform.forward;
         }
         private void ApplyMovement(Vector3 displacement)
         {
-            gameObject.transform.Translate(new Vector3((float)System.Math.Round(displacement.x, decimals),
+            UpdateRaycastOrigins();
+            displacement = HorizontalCollisions(displacement);
+            // Debug.Log(string.Format("Moving: {0}", displacement.z));
+            Debug.DrawRay(raycastOrigins.center, displacement, Color.blue);
+            gameObject.transform.position += new Vector3((float)System.Math.Round(displacement.x, decimals),
             (float)System.Math.Round(displacement.y, decimals),
-            (float)System.Math.Round(displacement.z, decimals)),
-            relativeTo: Space.World);
+            (float)System.Math.Round(displacement.z, decimals));
         }
+
+        #region Raycasting
+
+        void UpdateRaycastOrigins()
+        {
+            Bounds bounds = ECB.bounds;
+            raycastOrigins.center = bounds.center;
+        }
+
+        Vector3 HorizontalCollisions(Vector3 displacement)
+        {
+            Vector3 originalDisplacement = displacement;
+            CheckRaycast(raycastOrigins.center, displacement.normalized, displacement.magnitude, ref displacement, 0);
+
+            Debug.DrawRay(raycastOrigins.center, displacement, Color.yellow);
+
+            float theta = 45;
+            Vector3 newDirection = Quaternion.AngleAxis(theta, localBasisVectors.up) * originalDisplacement.normalized;
+            float newMag = displacement.magnitude * Mathf.Cos(Mathf.Deg2Rad * theta);
+            CheckRaycast(raycastOrigins.center, newDirection, newMag, ref displacement, theta);
+
+            Debug.DrawRay(raycastOrigins.center, displacement, Color.yellow);
+
+            theta = -45;
+            newDirection = Quaternion.AngleAxis(theta, localBasisVectors.up) * originalDisplacement.normalized;
+            newMag = displacement.magnitude * Mathf.Cos(Mathf.Deg2Rad * theta);
+            CheckRaycast(raycastOrigins.center, newDirection, newMag, ref displacement, theta);
+
+            theta = 75;
+            newDirection = Quaternion.AngleAxis(theta, localBasisVectors.up) * originalDisplacement.normalized;
+            newMag = displacement.magnitude * Mathf.Cos(Mathf.Deg2Rad * theta);
+            CheckRaycast(raycastOrigins.center, newDirection, newMag, ref displacement, theta);
+
+            Debug.DrawRay(raycastOrigins.center, displacement, Color.yellow);
+
+            theta = -75;
+            newDirection = Quaternion.AngleAxis(theta, localBasisVectors.up) * originalDisplacement.normalized;
+            newMag = displacement.magnitude * Mathf.Cos(Mathf.Deg2Rad * theta);
+            CheckRaycast(raycastOrigins.center, newDirection, newMag, ref displacement, theta);
+
+            theta = 25;
+            newDirection = Quaternion.AngleAxis(theta, localBasisVectors.up) * originalDisplacement.normalized;
+            newMag = displacement.magnitude * Mathf.Cos(Mathf.Deg2Rad * theta);
+            CheckRaycast(raycastOrigins.center, newDirection, newMag, ref displacement, theta);
+
+            Debug.DrawRay(raycastOrigins.center, displacement, Color.yellow);
+
+            theta = -25;
+            newDirection = Quaternion.AngleAxis(theta, localBasisVectors.up) * originalDisplacement.normalized;
+            newMag = displacement.magnitude * Mathf.Cos(Mathf.Deg2Rad * theta);
+            CheckRaycast(raycastOrigins.center, newDirection, newMag, ref displacement, theta);
+
+            if (displacement.magnitude < MINIMUM_MOVE_THRESHOLD)
+                return Vector3.zero;
+            return displacement;
+        }
+
+        void CheckRaycast(Vector3 rayOrigin, Vector3 rayDir, float rayMag, ref Vector3 displacement, float theta = 0)
+        {
+            rayMag += SKIN_WIDTH;
+            rayMag += ECB.radius;
+            RaycastHit hit;
+            if (Physics.Raycast(rayOrigin, rayDir, out hit, rayMag, LayerMaskConfig.DEFAULT))
+            {
+                Debug.DrawRay(rayOrigin, rayDir * rayMag, Color.red);
+                //Debug.Log(string.Format("Hit distance: {0} and displacement: {1} new movement: {2}", hit.distance, rayDir * rayMag, rayDir * rayMag - Vector3.Project(rayDir * rayMag, hit.normal)));
+
+                // Calculate the how much of the displacement vector is in the wall.
+                float colliderToWall = hit.distance - SKIN_WIDTH - ECB.radius;
+                float colliderToWall_DisplacementComponent = (colliderToWall / Mathf.Cos(Mathf.Deg2Rad * theta));
+                float displacementInTheWall = displacement.magnitude - colliderToWall_DisplacementComponent;
+
+                // Remove how much the player would move into the wall.
+                Vector3 inWallMovement = Vector3.Project(displacementInTheWall * rayDir, hit.normal);
+                // displacement -= inWallMovement;
+                RemoveVectorComponent(ref displacement, inWallMovement);
+            }
+            else
+            {
+                Debug.DrawRay(rayOrigin, rayDir * rayMag, Color.green);
+            }
+        }
+
+        void RemoveVectorComponent(ref Vector3 target, Vector3 componentToRemove)
+        {
+            if (Mathf.Abs(target.x - componentToRemove.x) < Mathf.Abs(target.x))
+            {
+                target.x -= componentToRemove.x;
+            }
+            if (Mathf.Abs(target.y - componentToRemove.y) < Mathf.Abs(target.y))
+            {
+                target.y -= componentToRemove.y;
+            }
+            if (Mathf.Abs(target.z - componentToRemove.z) < Mathf.Abs(target.z))
+            {
+                target.z -= componentToRemove.z;
+            }
+        }
+
+        #endregion
+
         public void Turn(float iHorz)
         {
             if (Mathf.Abs(iHorz) > 0)
             {
-                Vector3 turnDirection = Mathf.Sign(iHorz) * transform.right;
-                Vector3 rotatedFacingVec = Vector3.RotateTowards(transform.forward, turnDirection, turnRate * Time.fixedDeltaTime * Mathf.Abs(iHorz), 1);
+                Vector3 turnDirection = Mathf.Sign(iHorz) * localBasisVectors.right;
+                Vector3 rotatedFacingVec = Vector3.RotateTowards(localBasisVectors.forward, turnDirection, turnRate * Time.fixedDeltaTime * Mathf.Abs(iHorz), 1);
 
+                // Debug.DrawLine(transform.position, transform.position + localBasisVectors.forward, Color.red);
+                // Debug.DrawLine(transform.position, transform.position + turnDirection, Color.blue);
+                // Debug.DrawLine(transform.position, transform.position + rotatedFacingVec, Color.yellow);
 
-                Debug.DrawLine(transform.position, transform.position + transform.forward, Color.red);
-                Debug.DrawLine(transform.position, transform.position + turnDirection, Color.blue);
-                Debug.DrawLine(transform.position, transform.position + rotatedFacingVec, Color.yellow);
+                localBasisVectors.rotation = Quaternion.LookRotation(rotatedFacingVec, localBasisVectors.up);
 
-                transform.rotation = Quaternion.LookRotation(rotatedFacingVec, transform.up);
-
-                Vector3 rotatedVelocityVec = Vector3.RotateTowards(velocity, transform.forward, velocityTurnRate * Time.fixedDeltaTime, 1);
+                Vector3 rotatedVelocityVec = Vector3.RotateTowards(velocity, localBasisVectors.forward, velocityTurnRate * Time.fixedDeltaTime, 1);
                 velocity = Quaternion.FromToRotation(velocity, rotatedVelocityVec) * velocity;
             }
         }

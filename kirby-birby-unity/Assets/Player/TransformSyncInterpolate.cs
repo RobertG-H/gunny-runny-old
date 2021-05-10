@@ -9,6 +9,9 @@ using Mirror;
 /// </summary>
 public class TransformSyncInterpolate : NetworkBehaviour
 {
+    [SerializeField]
+    Transform localBasisVectors;
+
     [SyncVar]
     private Vector3 syncPos;
 
@@ -32,7 +35,7 @@ public class TransformSyncInterpolate : NetworkBehaviour
     void Start()
     {
         lastPos = transform.position;
-        lastRot = transform.rotation;
+        lastRot = localBasisVectors.rotation;
     }
 
     void FixedUpdate()
@@ -45,10 +48,10 @@ public class TransformSyncInterpolate : NetworkBehaviour
 
     void TransmitMotion()
     {
-        if (Vector3.Distance(transform.position, lastPos) > posThreshold || Quaternion.Angle(transform.rotation, lastRot) > rotThreshold)
+        if (Vector3.Distance(transform.position, lastPos) > posThreshold || Quaternion.Angle(localBasisVectors.rotation, lastRot) > rotThreshold)
         {
             syncPos = transform.position;
-            syncYRot = transform.localEulerAngles.y;
+            syncYRot = localBasisVectors.localEulerAngles.y;
             RpcApplyMotion();
         }
     }
@@ -75,11 +78,11 @@ public class TransformSyncInterpolate : NetworkBehaviour
     {
         // Save previous pose first.
         lastPos = transform.position;
-        lastRot = transform.rotation;
+        lastRot = localBasisVectors.rotation;
 
         transform.position = Vector3.Lerp(transform.position, futurePos, Time.fixedDeltaTime * lerpRate);
         Vector3 newRot = new Vector3(0, syncYRot, 0);
-        transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.Euler(newRot), Time.fixedDeltaTime * lerpRate);
+        localBasisVectors.rotation = Quaternion.Lerp(localBasisVectors.rotation, Quaternion.Euler(newRot), Time.fixedDeltaTime * lerpRate);
 
     }
 

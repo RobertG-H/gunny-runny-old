@@ -6,6 +6,6 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/InterpolationTesting.unity
-    guid: 8888c2d4b50c77549958996ae7421d53
+    path: Assets/Scenes/RScene.unity
+    guid: 5b51b65798cf11a4483185f7dc48ce72
   m_configObjects: {}
