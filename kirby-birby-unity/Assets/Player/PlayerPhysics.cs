@@ -46,7 +46,7 @@ namespace Player
 
         #region Raycasting Properties
         private float SKIN_WIDTH = 0.02f;
-        private float MINIMUM_MOVE_THRESHOLD = 0.001f;
+        private float MINIMUM_MOVE_THRESHOLD = 0.01f;
         #endregion
 
         #region Local state
@@ -143,12 +143,40 @@ namespace Player
             Vector3 originalDisplacement = displacement;
             CheckRaycast(raycastOrigins.center, displacement.normalized, displacement.magnitude, ref displacement, 0);
 
+            Debug.DrawRay(raycastOrigins.center, displacement, Color.yellow);
+
             float theta = 45;
             Vector3 newDirection = Quaternion.AngleAxis(theta, localBasisVectors.up) * originalDisplacement.normalized;
             float newMag = displacement.magnitude * Mathf.Cos(Mathf.Deg2Rad * theta);
             CheckRaycast(raycastOrigins.center, newDirection, newMag, ref displacement, theta);
 
+            Debug.DrawRay(raycastOrigins.center, displacement, Color.yellow);
+
             theta = -45;
+            newDirection = Quaternion.AngleAxis(theta, localBasisVectors.up) * originalDisplacement.normalized;
+            newMag = displacement.magnitude * Mathf.Cos(Mathf.Deg2Rad * theta);
+            CheckRaycast(raycastOrigins.center, newDirection, newMag, ref displacement, theta);
+
+            theta = 75;
+            newDirection = Quaternion.AngleAxis(theta, localBasisVectors.up) * originalDisplacement.normalized;
+            newMag = displacement.magnitude * Mathf.Cos(Mathf.Deg2Rad * theta);
+            CheckRaycast(raycastOrigins.center, newDirection, newMag, ref displacement, theta);
+
+            Debug.DrawRay(raycastOrigins.center, displacement, Color.yellow);
+
+            theta = -75;
+            newDirection = Quaternion.AngleAxis(theta, localBasisVectors.up) * originalDisplacement.normalized;
+            newMag = displacement.magnitude * Mathf.Cos(Mathf.Deg2Rad * theta);
+            CheckRaycast(raycastOrigins.center, newDirection, newMag, ref displacement, theta);
+
+            theta = 25;
+            newDirection = Quaternion.AngleAxis(theta, localBasisVectors.up) * originalDisplacement.normalized;
+            newMag = displacement.magnitude * Mathf.Cos(Mathf.Deg2Rad * theta);
+            CheckRaycast(raycastOrigins.center, newDirection, newMag, ref displacement, theta);
+
+            Debug.DrawRay(raycastOrigins.center, displacement, Color.yellow);
+
+            theta = -25;
             newDirection = Quaternion.AngleAxis(theta, localBasisVectors.up) * originalDisplacement.normalized;
             newMag = displacement.magnitude * Mathf.Cos(Mathf.Deg2Rad * theta);
             CheckRaycast(raycastOrigins.center, newDirection, newMag, ref displacement, theta);
@@ -168,20 +196,35 @@ namespace Player
                 Debug.DrawRay(rayOrigin, rayDir * rayMag, Color.red);
                 //Debug.Log(string.Format("Hit distance: {0} and displacement: {1} new movement: {2}", hit.distance, rayDir * rayMag, rayDir * rayMag - Vector3.Project(rayDir * rayMag, hit.normal)));
 
-                float distFromEdgeToWall = hit.distance - SKIN_WIDTH - ECB.radius;
-                float distFromEdgeToWall_dispComponent = (distFromEdgeToWall / Mathf.Cos(Mathf.Deg2Rad * theta));
-                float distInTheWall = displacement.magnitude - distFromEdgeToWall_dispComponent;
+                // Calculate the how much of the displacement vector is in the wall.
+                float colliderToWall = hit.distance - SKIN_WIDTH - ECB.radius;
+                float colliderToWall_DisplacementComponent = (colliderToWall / Mathf.Cos(Mathf.Deg2Rad * theta));
+                float displacementInTheWall = displacement.magnitude - colliderToWall_DisplacementComponent;
 
-                // Remove this so that the player doesn't move into the wall.
-                Vector3 inWallMovement = Vector3.Project(distInTheWall * rayDir, hit.normal);
-
-                // This removes the component normal to the wall.
-                // Only want to remove the portion that would cause you to go into the wall
-                displacement -= inWallMovement;
+                // Remove how much the player would move into the wall.
+                Vector3 inWallMovement = Vector3.Project(displacementInTheWall * rayDir, hit.normal);
+                // displacement -= inWallMovement;
+                RemoveVectorComponent(ref displacement, inWallMovement);
             }
             else
             {
                 Debug.DrawRay(rayOrigin, rayDir * rayMag, Color.green);
+            }
+        }
+
+        void RemoveVectorComponent(ref Vector3 target, Vector3 componentToRemove)
+        {
+            if (Mathf.Abs(target.x - componentToRemove.x) < Mathf.Abs(target.x))
+            {
+                target.x -= componentToRemove.x;
+            }
+            if (Mathf.Abs(target.y - componentToRemove.y) < Mathf.Abs(target.y))
+            {
+                target.y -= componentToRemove.y;
+            }
+            if (Mathf.Abs(target.z - componentToRemove.z) < Mathf.Abs(target.z))
+            {
+                target.z -= componentToRemove.z;
             }
         }
 
@@ -193,7 +236,6 @@ namespace Player
             {
                 Vector3 turnDirection = Mathf.Sign(iHorz) * localBasisVectors.right;
                 Vector3 rotatedFacingVec = Vector3.RotateTowards(localBasisVectors.forward, turnDirection, turnRate * Time.fixedDeltaTime * Mathf.Abs(iHorz), 1);
-
 
                 // Debug.DrawLine(transform.position, transform.position + localBasisVectors.forward, Color.red);
                 // Debug.DrawLine(transform.position, transform.position + turnDirection, Color.blue);

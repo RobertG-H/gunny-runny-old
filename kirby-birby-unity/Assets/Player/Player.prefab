@@ -416,14 +416,13 @@ MonoBehaviour:
   localBasisVectors: {fileID: 5375794110142889907}
   acceleration: 10
   brakingAcceleration: -30
-  topSpeed: 1
+  topSpeed: 10
   turnRate: 2
   velocityTurnRate: 1
   boostDuration: 1
   boostAcceleration: 50
   boostTopSpeedMultiplier: 2
   maxStopAngle: 45
-  SKIN_WIDTH: 0.02
   chargeRate: 2
   maxCharge: 5
   velocity: {x: 0, y: 0, z: 0}
