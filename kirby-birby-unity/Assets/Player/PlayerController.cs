@@ -7,7 +7,7 @@ using Mirror;
 
 namespace Player
 {
-    public class PlayerController : NetworkBehaviour
+    public class PlayerController : NetworkBehaviour, Damageable
     {
         public PlayerPhysics physics;
         [SerializeField]
@@ -17,6 +17,11 @@ namespace Player
 
         [ReadOnly]
         public float iHorz;
+
+        #region Gameplay vars
+        [SerializeField] float maxHealth;
+        [ReadOnly, SerializeField] float currentHealth;
+        #endregion
 
         #region Networking vars
         [Header("Networking")]
@@ -108,6 +113,17 @@ namespace Player
         {
             playerCamera.SetActive(true);
         }
+
+        #region Interface methods
+        void Damageable.TakeDamage(float amount)
+        {
+            currentHealth -= amount;
+            if (currentHealth <= 0)
+            {
+                Debug.Log("Dead!");
+            }
+        }
+        #endregion
 
     }
 }
