@@ -1,18 +1,15 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Player;
 
 public class Bullet : MonoBehaviour
 {
-    [SerializeField] Collider col;
-    void Start()
+    [SerializeField] float speed;
+    void FixedUpdate()
     {
-
+        Vector3 displacement = transform.forward * speed * Time.fixedDeltaTime;
+        transform.Translate(displacement);
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-
-    }
 }

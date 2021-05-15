@@ -14,6 +14,7 @@ namespace Player
             //Layers that the player should ignore
             DEFAULT = 1 << LayerMask.NameToLayer("Player");
             DEFAULT += 1 << LayerMask.NameToLayer("Ignore Raycast");
+            DEFAULT += 1 << LayerMask.NameToLayer("Projectile");
             DEFAULT = ~DEFAULT;
         }
 

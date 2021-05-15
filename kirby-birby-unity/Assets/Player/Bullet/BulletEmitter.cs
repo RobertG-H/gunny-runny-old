@@ -4,15 +4,19 @@ using UnityEngine;
 
 public class BulletEmitter : MonoBehaviour
 {
-    // Start is called before the first frame update
+    [SerializeField] float bulletsPerSecond;
+    [SerializeField] bool isActive;
+
+    [SerializeField] GameObject bulletPrefab;
+
     void Start()
     {
-        
+        InvokeRepeating("FireBullet", 0f, 1f / bulletsPerSecond);
     }
 
-    // Update is called once per frame
-    void Update()
+    void FireBullet()
     {
-        
+        GameObject.Instantiate(bulletPrefab, transform.position, Quaternion.identity);
     }
+
 }

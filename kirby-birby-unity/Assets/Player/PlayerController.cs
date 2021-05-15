@@ -36,9 +36,14 @@ namespace Player
         public Color playerColor = Color.white;
         #endregion
 
+        #region Debug
+        [SerializeField] bool isDebug;
+        #endregion
+
         void Awake()
         {
             playerCamera.SetActive(false);
+            currentHealth = maxHealth;
         }
 
         #region Networking methods
@@ -86,7 +91,6 @@ namespace Player
         void CmdStopBraking()
         {
             physics.StopBraking();
-
         }
         #endregion
 
@@ -125,5 +129,15 @@ namespace Player
         }
         #endregion
 
+        #region Debug
+        void OnGUI()
+        {
+            if (isDebug)
+            {
+                Rect rectPos = new Rect(10, 400, 100, 20);
+                GUI.Label(rectPos, string.Format("Health: {0}", currentHealth));
+            }
+        }
+        #endregion
     }
 }

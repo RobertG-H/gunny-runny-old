@@ -230,7 +230,7 @@ GameObject:
   - component: {fileID: 1150392449789306317}
   m_Layer: 6
   m_Name: ECB
-  m_TagString: Untagged
+  m_TagString: IgnoreHit
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -277,6 +277,7 @@ GameObject:
   - component: {fileID: 358545420636904939}
   - component: {fileID: 8041390985806502650}
   - component: {fileID: 7585905917392952147}
+  - component: {fileID: 1426579326556588043}
   m_Layer: 6
   m_Name: Player
   m_TagString: Player
@@ -396,10 +397,13 @@ MonoBehaviour:
   model: {fileID: 3104029965972190299}
   playerCamera: {fileID: 297102466954199877}
   iHorz: 0
+  maxHealth: 5
+  currentHealth: 0
   playerNameText: {fileID: 8756031236947488949}
   playerNameObject: {fileID: 6798211979788622024}
   playerName: 
   playerColor: {r: 1, g: 1, b: 1, a: 1}
+  isDebug: 1
 --- !u!114 &8041390985806502650
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -446,6 +450,20 @@ MonoBehaviour:
   lerpRate: 8
   posThreshold: 0.1
   rotThreshold: 0.1
+--- !u!136 &1426579326556588043
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5088828701833135039}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  m_Radius: 0.5
+  m_Height: 3.58
+  m_Direction: 2
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &6798211979788622024
 GameObject:
   m_ObjectHideFlags: 0
