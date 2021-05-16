@@ -10,6 +10,8 @@ GameObject:
   m_Component:
   - component: {fileID: 4312343145289578591}
   - component: {fileID: 6557689109128765253}
+  - component: {fileID: 292745618173731621}
+  - component: {fileID: 2872458510768463654}
   m_Layer: 7
   m_Name: Bullet
   m_TagString: Untagged
@@ -45,7 +47,44 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 596bbb6f1d56d254eb54e04b4b735348, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 10
+  syncMode: 0
+  syncInterval: 0.1
+  speed: 50
+--- !u!114 &292745618173731621
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4312343145289578584}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b91ecbcc199f4492b9a91e820070131, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sceneId: 0
+  serverOnly: 0
+  m_AssetId: 
+  hasSpawned: 0
+--- !u!114 &2872458510768463654
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4312343145289578584}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9aaf2e2b37b46be4db17f4fc41315855, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  syncMode: 0
+  syncInterval: 0.1
+  localBasisVectors: {fileID: 4312343145289578591}
+  currentVelocity: {x: 0, y: 0, z: 0}
+  lerpRate: 10
+  posThreshold: 0.5
+  rotThreshold: 5
 --- !u!1 &4312343145722587531
 GameObject:
   m_ObjectHideFlags: 0
@@ -59,8 +98,8 @@ GameObject:
   - component: {fileID: 2622108331637264664}
   - component: {fileID: 7383920021709407977}
   m_Layer: 7
-  m_Name: Collider
-  m_TagString: Untagged
+  m_Name: BulletCollider
+  m_TagString: Projectile
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -89,8 +128,8 @@ CapsuleCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 1
   m_Enabled: 1
-  m_Radius: 0.18
-  m_Height: 1.51
+  m_Radius: 0.05
+  m_Height: 0.26
   m_Direction: 2
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!54 &2622108331637264664
@@ -135,15 +174,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: b0119cf0bb14b6e409441b7f25efc9eb, type: 3}
       propertyPath: m_LocalScale.x
-      value: 0.2
+      value: 0.05
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: b0119cf0bb14b6e409441b7f25efc9eb, type: 3}
       propertyPath: m_LocalScale.y
-      value: 0.2
+      value: 0.05
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: b0119cf0bb14b6e409441b7f25efc9eb, type: 3}
       propertyPath: m_LocalScale.z
-      value: 0.2
+      value: 0.05
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: b0119cf0bb14b6e409441b7f25efc9eb, type: 3}
       propertyPath: m_LocalPosition.x

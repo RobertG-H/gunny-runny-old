@@ -1,22 +1,26 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Mirror;
 
-public class BulletEmitter : MonoBehaviour
+public class BulletEmitter : NetworkBehaviour
 {
+    // [SerializeField ] NetworkBehaviour 
     [SerializeField] float bulletsPerSecond;
-    [SerializeField] bool isActive;
-
     [SerializeField] GameObject bulletPrefab;
+    [SerializeField] Transform spawnLocation;
 
-    void Start()
+    public override void OnStartServer()
     {
+        if (!isServer) return;
         InvokeRepeating("FireBullet", 0f, 1f / bulletsPerSecond);
     }
 
     void FireBullet()
     {
-        GameObject.Instantiate(bulletPrefab, transform.position, Quaternion.identity);
+        GameObject bullet = Instantiate(bulletPrefab, spawnLocation.position, Quaternion.identity);
+        NetworkServer.Spawn(bullet);
+
     }
 
 }

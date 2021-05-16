@@ -43,6 +43,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7be2d251fe8e0124c9454bc48284fdfd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  syncMode: 0
+  syncInterval: 0.1
   bulletsPerSecond: 3
-  isActive: 1
   bulletPrefab: {fileID: 4312343145289578584, guid: 37121242b69150d4e882f0ac8a45e0ea, type: 3}
