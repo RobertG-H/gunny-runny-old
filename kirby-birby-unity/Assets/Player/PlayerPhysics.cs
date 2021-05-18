@@ -1,53 +1,26 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace Player
 {
-    public static class LayerMaskConfig
-    {
-        public static int DEFAULT;
-
-        public static void initConfig()
-        {
-            //Layers that the player should ignore
-            DEFAULT = 1 << LayerMask.NameToLayer("Player");
-            DEFAULT += 1 << LayerMask.NameToLayer("Ignore Raycast");
-            DEFAULT += 1 << LayerMask.NameToLayer("Projectile");
-            DEFAULT = ~DEFAULT;
-        }
-
-    }
-
-    /// <summary>
-    /// Physics is SERVER-ONLY
-    /// </summary>
     public class PlayerPhysics : MonoBehaviour
     {
         public PlayerController p;
-        [SerializeField]
-        CapsuleCollider ECB;
-
-        [SerializeField]
-        Transform localBasisVectors;
+        [SerializeField] Rigidbody rb;
+        [SerializeField] Transform localBasisVectors;
 
         #region Movement properties
         [Header("Movement properties")]
         public float acceleration;
         public float brakingAcceleration;
         public float topSpeed;
-        public float turnRate;
-        public float velocityTurnRate;
+        public float turnRadius;
         public float boostDuration;
         public float boostAcceleration;
-        public float boostTopSpeedMultiplier;
-        public float maxStopAngle;
-        #endregion
-
-        #region Raycasting Properties
-        private float SKIN_WIDTH = 0.02f;
-        private float MINIMUM_MOVE_THRESHOLD = 0.01f;
+        public float boostTopSpeed;
+        public float naturalDeceleration;
+        public float LOW_SPEED_TURN_THRESHOLD;
         #endregion
 
         #region Local state
@@ -56,27 +29,20 @@ namespace Player
         public float chargeRate, maxCharge;
         private bool boosting;
         private IEnumerator boostTimer;
-
-        [ReadOnly, SerializeField]
-        private Vector3 velocity = Vector3.zero;
         #endregion
 
-        #region Raycasting and Collision Variables
-        public RaycastOrigins raycastOrigins;
-
-        //From perspective of looking FROM the player's perspective
-        public struct RaycastOrigins
-        {
-            public Vector3 center;
-        }
+        #region Debug
+        [SerializeField] bool isDebug;
         #endregion
-        private int decimals = 8;
 
-        void Awake()
+        void Start()
         {
-            LayerMaskConfig.initConfig();
+            if (!p.isServer)
+            {
+                Destroy(rb);
+                return;
+            }
         }
-
         void Update()
         {
             if (!p.isServer) { return; }
@@ -88,166 +54,107 @@ namespace Player
         void FixedUpdate()
         {
             if (!p.isServer) { return; }
-            ApplyAcceleration();
-
-            Vector3 displacement = velocity * Time.fixedDeltaTime;
-            Turn(p.iHorz);
-            ApplyMovement(displacement);
+            ApplyAcceleration(p.iHorz);
         }
-        private void ApplyAcceleration()
+
+        #region Private movement methods
+        private void ApplyAcceleration(float iHorz)
         {
+            float accelToUse = acceleration;
+            float topSpeedToUse = topSpeed;
+            if (boosting)
+            {
+                accelToUse = charge * boostAcceleration;
+                topSpeedToUse = boostTopSpeed;
+            }
+
+            /* TURNING AND MOVING
+            * Calculate a circle for the player to follow the path of. The radius of this circle is the "turnRadius".
+            * Add a centripetal acceleration to ensure the player follows this path.
+            */
+
+            // Formula => (alpha = velocity^2 / radius)
+            float centripetalAccelMag = (rb.velocity.sqrMagnitude / turnRadius) * iHorz;
+            Vector3 centripetalAccel = localBasisVectors.right * centripetalAccelMag;
+
+            // Standard forward propulsion force
+            Vector3 forwardAccel = localBasisVectors.forward * accelToUse;
             if (braking)
             {
-                Vector3 deltaVel = velocity.normalized * brakingAcceleration * Time.fixedDeltaTime;
-                velocity += deltaVel;
+                forwardAccel = rb.velocity.normalized * brakingAcceleration;
+            }
+
+            rb.AddForce(forwardAccel + centripetalAccel, ForceMode.Acceleration);
+            RotateBody(centripetalAccelMag, iHorz);
+
+            // Decel player towards target topspeed
+            if (rb.velocity.magnitude > topSpeedToUse)
+            {
+                rb.AddForce(rb.velocity.normalized * naturalDeceleration, ForceMode.Acceleration);
+            }
+
+            // clamp total topspeed
+            rb.velocity = Vector3.ClampMagnitude(rb.velocity, boostTopSpeed);
+
+            // Stop player when braking and at low velocity
+            if (braking)
+            {
+                if (rb.velocity.sqrMagnitude < 0.1)
+                {
+                    rb.velocity = Vector3.zero;
+                }
+            }
+
+        }
+        /// <summary>
+        /// Add angular velocity to the rigidbody to ensure the player transform rotates while it follows the 
+        /// circular path given by the centripetal acceleration.
+        /// </summary>
+        /// <param name="centripetalAccelMag"></param>
+        /// <param name="iHorz"></param>
+        private void RotateBody(float centripetalAccelMag, float iHorz)
+        {
+            float angularSpeed = GetAngularSpeed(centripetalAccelMag);
+            float maxAngularSpeed = GetMaxAngularSpeed();
+
+            // Cap the turn rate by the normal top speed (ie. boosting doesn't make turning better)
+            if (angularSpeed > maxAngularSpeed)
+            {
+                rb.angularVelocity = localBasisVectors.up * maxAngularSpeed * Mathf.Sign(iHorz);
             }
             else
             {
-                float accelToUse = acceleration;
-                float topSpeedToUse = topSpeed;
-                if (boosting)
-                {
-                    accelToUse = charge * boostAcceleration;
-                    topSpeedToUse = topSpeed * boostTopSpeedMultiplier;
-                }
-                Vector3 deltaVel = localBasisVectors.forward * accelToUse * Time.fixedDeltaTime;
-                velocity += deltaVel;
-
-                Vector3 xzVel = new Vector3(velocity.x, 0, velocity.z);
-                if (xzVel.magnitude > topSpeedToUse)
-                {
-                    velocity = xzVel.normalized * topSpeedToUse + new Vector3(0, velocity.y, 0);
-                }
+                rb.angularVelocity = localBasisVectors.up * angularSpeed * Mathf.Sign(iHorz);
             }
-        }
-        private void ApplyMovement(Vector3 displacement)
-        {
-            UpdateRaycastOrigins();
-            displacement = HorizontalCollisions(displacement);
-            // Debug.Log(string.Format("Moving: {0}", displacement.z));
-            Debug.DrawRay(raycastOrigins.center, displacement, Color.blue);
-            gameObject.transform.position += new Vector3((float)System.Math.Round(displacement.x, decimals),
-            (float)System.Math.Round(displacement.y, decimals),
-            (float)System.Math.Round(displacement.z, decimals));
-        }
 
-        #region Raycasting
-
-        void UpdateRaycastOrigins()
-        {
-            Bounds bounds = ECB.bounds;
-            raycastOrigins.center = bounds.center;
-        }
-
-        Vector3 HorizontalCollisions(Vector3 displacement)
-        {
-            Vector3 originalDisplacement = displacement;
-            CheckRaycast(raycastOrigins.center, displacement.normalized, displacement.magnitude, ref displacement, 0);
-
-            Debug.DrawRay(raycastOrigins.center, displacement, Color.yellow);
-
-            float theta = 45;
-            Vector3 newDirection = Quaternion.AngleAxis(theta, localBasisVectors.up) * originalDisplacement.normalized;
-            float newMag = displacement.magnitude * Mathf.Cos(Mathf.Deg2Rad * theta);
-            CheckRaycast(raycastOrigins.center, newDirection, newMag, ref displacement, theta);
-
-            Debug.DrawRay(raycastOrigins.center, displacement, Color.yellow);
-
-            theta = -45;
-            newDirection = Quaternion.AngleAxis(theta, localBasisVectors.up) * originalDisplacement.normalized;
-            newMag = displacement.magnitude * Mathf.Cos(Mathf.Deg2Rad * theta);
-            CheckRaycast(raycastOrigins.center, newDirection, newMag, ref displacement, theta);
-
-            theta = 75;
-            newDirection = Quaternion.AngleAxis(theta, localBasisVectors.up) * originalDisplacement.normalized;
-            newMag = displacement.magnitude * Mathf.Cos(Mathf.Deg2Rad * theta);
-            CheckRaycast(raycastOrigins.center, newDirection, newMag, ref displacement, theta);
-
-            Debug.DrawRay(raycastOrigins.center, displacement, Color.yellow);
-
-            theta = -75;
-            newDirection = Quaternion.AngleAxis(theta, localBasisVectors.up) * originalDisplacement.normalized;
-            newMag = displacement.magnitude * Mathf.Cos(Mathf.Deg2Rad * theta);
-            CheckRaycast(raycastOrigins.center, newDirection, newMag, ref displacement, theta);
-
-            theta = 25;
-            newDirection = Quaternion.AngleAxis(theta, localBasisVectors.up) * originalDisplacement.normalized;
-            newMag = displacement.magnitude * Mathf.Cos(Mathf.Deg2Rad * theta);
-            CheckRaycast(raycastOrigins.center, newDirection, newMag, ref displacement, theta);
-
-            Debug.DrawRay(raycastOrigins.center, displacement, Color.yellow);
-
-            theta = -25;
-            newDirection = Quaternion.AngleAxis(theta, localBasisVectors.up) * originalDisplacement.normalized;
-            newMag = displacement.magnitude * Mathf.Cos(Mathf.Deg2Rad * theta);
-            CheckRaycast(raycastOrigins.center, newDirection, newMag, ref displacement, theta);
-
-            if (displacement.magnitude < MINIMUM_MOVE_THRESHOLD)
-                return Vector3.zero;
-            return displacement;
-        }
-
-        void CheckRaycast(Vector3 rayOrigin, Vector3 rayDir, float rayMag, ref Vector3 displacement, float theta = 0)
-        {
-            rayMag += SKIN_WIDTH;
-            rayMag += ECB.radius;
-            RaycastHit hit;
-            if (Physics.Raycast(rayOrigin, rayDir, out hit, rayMag, LayerMaskConfig.DEFAULT))
+            // At low speeds override the normal turn rate.
+            if (braking && rb.velocity.sqrMagnitude < (LOW_SPEED_TURN_THRESHOLD * LOW_SPEED_TURN_THRESHOLD))
             {
-                Debug.DrawRay(rayOrigin, rayDir * rayMag, Color.red);
-                //Debug.Log(string.Format("Hit distance: {0} and displacement: {1} new movement: {2}", hit.distance, rayDir * rayMag, rayDir * rayMag - Vector3.Project(rayDir * rayMag, hit.normal)));
-
-                // Calculate the how much of the displacement vector is in the wall.
-                float colliderToWall = hit.distance - SKIN_WIDTH - ECB.radius;
-                float colliderToWall_DisplacementComponent = (colliderToWall / Mathf.Cos(Mathf.Deg2Rad * theta));
-                float displacementInTheWall = displacement.magnitude - colliderToWall_DisplacementComponent;
-
-                // Remove how much the player would move into the wall.
-                Vector3 inWallMovement = Vector3.Project(displacementInTheWall * rayDir, hit.normal);
-                // displacement -= inWallMovement;
-                RemoveVectorComponent(ref displacement, inWallMovement);
-            }
-            else
-            {
-                Debug.DrawRay(rayOrigin, rayDir * rayMag, Color.green);
+                rb.angularVelocity = localBasisVectors.up * maxAngularSpeed * iHorz;
+                Debug.Log("Using override");
             }
         }
 
-        void RemoveVectorComponent(ref Vector3 target, Vector3 componentToRemove)
+        private float GetMaxCentripetalAcceleration()
         {
-            if (Mathf.Abs(target.x - componentToRemove.x) < Mathf.Abs(target.x))
-            {
-                target.x -= componentToRemove.x;
-            }
-            if (Mathf.Abs(target.y - componentToRemove.y) < Mathf.Abs(target.y))
-            {
-                target.y -= componentToRemove.y;
-            }
-            if (Mathf.Abs(target.z - componentToRemove.z) < Mathf.Abs(target.z))
-            {
-                target.z -= componentToRemove.z;
-            }
+            return ((topSpeed * topSpeed) / turnRadius);
+        }
+
+        private float GetMaxAngularSpeed()
+        {
+            return Mathf.Sqrt(GetMaxCentripetalAcceleration() / turnRadius);
+        }
+
+        // Formula => (alpha = omega^2 * radius)
+        private float GetAngularSpeed(float centripetalAccelMag)
+        {
+            return Mathf.Sqrt(Mathf.Abs(centripetalAccelMag) / turnRadius);
         }
 
         #endregion
 
-        public void Turn(float iHorz)
-        {
-            if (Mathf.Abs(iHorz) > 0)
-            {
-                Vector3 turnDirection = Mathf.Sign(iHorz) * localBasisVectors.right;
-                Vector3 rotatedFacingVec = Vector3.RotateTowards(localBasisVectors.forward, turnDirection, turnRate * Time.fixedDeltaTime * Mathf.Abs(iHorz), 1);
 
-                // Debug.DrawLine(transform.position, transform.position + localBasisVectors.forward, Color.red);
-                // Debug.DrawLine(transform.position, transform.position + turnDirection, Color.blue);
-                // Debug.DrawLine(transform.position, transform.position + rotatedFacingVec, Color.yellow);
-
-                localBasisVectors.rotation = Quaternion.LookRotation(rotatedFacingVec, localBasisVectors.up);
-
-                Vector3 rotatedVelocityVec = Vector3.RotateTowards(velocity, localBasisVectors.forward, velocityTurnRate * Time.fixedDeltaTime, 1);
-                velocity = Quaternion.FromToRotation(velocity, rotatedVelocityVec) * velocity;
-            }
-        }
+        #region public Ability methods
         public void Boost()
         {
             boosting = true;
@@ -275,21 +182,36 @@ namespace Player
             Boost();
         }
 
-        public void Stop()
+        #endregion
+
+        #region Debug
+        void OnGUI()
         {
-            SetVel(new Vector3(0, velocity.y, 0));
+            if (isDebug)
+            {
+                if (!p.isServer) return;
+                Rect rectPos = new Rect(400, 400, 100, 20);
+                GUI.Label(rectPos, string.Format("Speed: {0}", rb.velocity.magnitude));
+            }
         }
-        public void AddVel(float x = 0, float y = 0, float z = 0)
+
+        void OnDrawGizmos()
         {
-            velocity = new Vector3(velocity.x + x, velocity.y + y, velocity.z + z);
+            if (isDebug)
+            {
+                // Draws a sphere for the turn radius
+                // Gizmos.color = Color.magenta;
+                // if (Mathf.Abs(p.iHorz) > 0)
+                // {
+                //     Vector3 position = new Vector3(localBasisVectors.position.x, localBasisVectors.position.y, localBasisVectors.position.z);
+                //     position += localBasisVectors.right * Mathf.Sign(p.iHorz) * turnRadius;
+                //     Gizmos.DrawSphere(position, turnRadius);
+                // }
+            }
+
         }
-        public void AddVel(Vector3 vel)
-        {
-            velocity += vel;
-        }
-        public void SetVel(Vector3 vel)
-        {
-            velocity = vel;
-        }
+        #endregion
     }
+
+
 }

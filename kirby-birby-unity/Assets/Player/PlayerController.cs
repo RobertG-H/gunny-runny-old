@@ -9,7 +9,7 @@ namespace Player
 {
     public class PlayerController : NetworkBehaviour, Damageable
     {
-        public PlayerPhysicsRigidbody physics;
+        public PlayerPhysics physics;
         [SerializeField]
         private Renderer model;
         [SerializeField]

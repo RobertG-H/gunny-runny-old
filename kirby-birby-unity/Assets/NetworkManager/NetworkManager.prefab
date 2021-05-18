@@ -61,10 +61,11 @@ MonoBehaviour:
   disconnectInactiveConnections: 0
   disconnectInactiveTimeout: 60
   authenticator: {fileID: 0}
-  playerPrefab: {fileID: 5088828701833135039, guid: fd8bca6bd32d5a6488957636faf8b168, type: 3}
+  playerPrefab: {fileID: 3688993058380937121, guid: 84074efd748a6444ab60aeb43a4fc3c3, type: 3}
   autoCreatePlayer: 1
   playerSpawnMethod: 1
-  spawnPrefabs: []
+  spawnPrefabs:
+  - {fileID: 4312343145289578584, guid: 37121242b69150d4e882f0ac8a45e0ea, type: 3}
 --- !u!114 &1725797732739495081
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -77,7 +78,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6b0fecffa3f624585964b0d0eb21b18e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Port: 7777
+  Port: 65001
   NoDelay: 1
   Interval: 10
   FastResend: 2
@@ -114,7 +115,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c7424c1070fad4ba2a7a96b02fbeb4bb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  port: 7777
+  port: 65001
   NoDelay: 1
   SendTimeout: 5000
   ReceiveTimeout: 5000
