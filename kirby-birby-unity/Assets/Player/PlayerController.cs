@@ -9,11 +9,10 @@ namespace Player
 {
     public class PlayerController : NetworkBehaviour, Damageable
     {
-        public PlayerPhysics physics;
-        [SerializeField]
-        private Renderer model;
-        [SerializeField]
-        private GameObject playerCamera;
+        [SerializeField] private PlayerPhysics physics;
+        [SerializeField] private TransformSyncInterpolate transformSyncInterpolate;
+        [SerializeField] private Renderer model;
+        [SerializeField] private GameObject playerCamera;
 
         [ReadOnly]
         public float iHorz;
@@ -98,7 +97,8 @@ namespace Player
         public void OnHorizontal(InputAction.CallbackContext context)
         {
             if (!isLocalPlayer) return;
-            CmdSendInputs(context.ReadValue<float>());
+            iHorz = context.ReadValue<float>();
+            CmdSendInputs(iHorz);
         }
         public void OnCharge(InputAction.CallbackContext context)
         {
@@ -126,6 +126,15 @@ namespace Player
             {
                 Debug.Log("Dead!");
             }
+        }
+        #endregion
+
+        #region Public Getters
+
+        public float GetSpeed()
+        {
+            if (isServer) return physics.GetVelocity().magnitude;
+            return transformSyncInterpolate.GetVelocity().magnitude;
         }
         #endregion
 

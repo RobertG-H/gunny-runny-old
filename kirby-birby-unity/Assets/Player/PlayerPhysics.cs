@@ -131,7 +131,6 @@ namespace Player
             if (braking && rb.velocity.sqrMagnitude < (LOW_SPEED_TURN_THRESHOLD * LOW_SPEED_TURN_THRESHOLD))
             {
                 rb.angularVelocity = localBasisVectors.up * maxAngularSpeed * iHorz;
-                Debug.Log("Using override");
             }
         }
 
@@ -182,6 +181,14 @@ namespace Player
             Boost();
         }
 
+        #endregion
+
+        #region Public Getters
+
+        public Vector3 GetVelocity()
+        {
+            return rb.velocity;
+        }
         #endregion
 
         #region Debug

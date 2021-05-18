@@ -259,6 +259,7 @@ MonoBehaviour:
   syncMode: 0
   syncInterval: 0.1
   physics: {fileID: 3498227295244470588}
+  transformSyncInterpolate: {fileID: 2082989763320835917}
   model: {fileID: 3974446501168103115}
   playerCamera: {fileID: 8192412780390545243}
   iHorz: 0
@@ -307,7 +308,6 @@ MonoBehaviour:
   brakingAcceleration: -15
   topSpeed: 16
   turnRadius: 10
-  turnPoint: {fileID: 0}
   boostDuration: 1
   boostAcceleration: 30
   boostTopSpeed: 19
@@ -357,6 +357,7 @@ GameObject:
   - component: {fileID: 7693220787450188524}
   - component: {fileID: 1964131664966835296}
   - component: {fileID: 7264071668574545054}
+  - component: {fileID: 8905962514015698155}
   m_Layer: 6
   m_Name: PlayerCamera
   m_TagString: Untagged
@@ -372,7 +373,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8192412780390545243}
   m_LocalRotation: {x: 0.218569, y: -0, z: -0, w: 0.97582155}
-  m_LocalPosition: {x: 0, y: 2.17, z: -3.24}
+  m_LocalPosition: {x: 0, y: 2.22, z: -3.24}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 3688993058380937125}
@@ -429,6 +430,24 @@ AudioListener:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8192412780390545243}
   m_Enabled: 1
+--- !u!114 &8905962514015698155
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8192412780390545243}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 775178add2767494ca5999618797f14c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerTransfrom: {fileID: 3688993058380937125}
+  pcont: {fileID: 8167003266192321013}
+  xOffsetMax: 0.3
+  zRotOffsetMax: 2
+  distance: 8
+  distanceMult: 1
 --- !u!1001 &2386919053397226918
 PrefabInstance:
   m_ObjectHideFlags: 0
