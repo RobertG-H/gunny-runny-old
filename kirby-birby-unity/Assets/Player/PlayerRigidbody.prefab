@@ -306,7 +306,7 @@ MonoBehaviour:
   acceleration: 16
   brakingAcceleration: -15
   topSpeed: 16
-  turnRate: 1.8
+  turnRadius: 8
   boostDuration: 1
   boostAcceleration: 50
   boostTopSpeed: 25

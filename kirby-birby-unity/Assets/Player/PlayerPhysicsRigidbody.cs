@@ -15,7 +15,7 @@ namespace Player
         public float acceleration;
         public float brakingAcceleration;
         public float topSpeed;
-        public float turnRate;
+        public float turnRadius;
         public float boostDuration;
         public float boostAcceleration;
         public float boostTopSpeed;
@@ -90,7 +90,19 @@ namespace Player
         {
             if (Mathf.Abs(iHorz) > 0)
             {
-                rb.angularVelocity = localBasisVectors.up * turnRate * iHorz;
+                // When braking you have max turn ability
+                if (braking)
+                {
+                    float angularSpeed = topSpeed / turnRadius;
+                    rb.angularVelocity = localBasisVectors.up * angularSpeed * iHorz;
+                }
+                else
+                {
+                    // Cap the angular speed by the normal topspeed
+                    float angularSpeed = Mathf.Min(rb.velocity.magnitude / turnRadius, topSpeed / turnRadius);
+                    rb.angularVelocity = localBasisVectors.up * angularSpeed * iHorz;
+                }
+
             }
             else
             {
