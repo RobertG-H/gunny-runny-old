@@ -143,7 +143,7 @@ namespace Player
         {
             if (isDebug)
             {
-                Rect rectPos = new Rect(10, 400, 100, 20);
+                Rect rectPos = new Rect(10, 10, 100, 20);
                 GUI.Label(rectPos, string.Format("Health: {0}", currentHealth));
             }
         }

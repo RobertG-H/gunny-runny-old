@@ -7,7 +7,7 @@ namespace Player
     public class CameraController : MonoBehaviour
     {
         [SerializeField] Transform playerTransfrom;
-        [SerializeField] PlayerController pcont;
+        [SerializeField] PlayerController p;
 
         [SerializeField] float xOffsetMax = 0.3f;
         [SerializeField] float zRotOffsetMax = 2f;
@@ -53,7 +53,7 @@ namespace Player
 
         void HandleAngleLag()
         {
-            float turnAmount = pcont.iHorz;
+            float turnAmount = p.iHorz;
             xOffset = Mathf.Lerp(xOffset, xOffsetMax * turnAmount, 0.1f);
             float inverseTurnAmount = turnAmount * -1;
             zRotOffset = Mathf.Lerp(zRotOffset, zRotOffsetMax * inverseTurnAmount, 0.1f);
@@ -61,7 +61,7 @@ namespace Player
 
         void HandleSpeedDip()
         {
-            float speedDipMult = Mathf.Clamp01(pcont.GetSpeed() * 0.03333f);
+            float speedDipMult = Mathf.Clamp01(p.GetSpeed() * 0.03333f);
             Debug.Log(speedDipMult);
             speedDipMult *= speedDipMult * speedDipMult;
 
@@ -72,7 +72,7 @@ namespace Player
 
         void HandleFOV()
         {
-            float speedMult = Mathf.Clamp01(pcont.GetSpeed() * 0.01f) + 1;
+            float speedMult = Mathf.Clamp01(p.GetSpeed() * 0.01f) + 1;
             cam.fieldOfView = startFOV * speedMult;
         }
     }

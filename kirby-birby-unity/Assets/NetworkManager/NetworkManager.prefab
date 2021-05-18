@@ -101,7 +101,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   showGUI: 1
-  offsetX: 0
+  offsetX: 800
   offsetY: 0
 --- !u!114 &1725797732739495061
 MonoBehaviour:

@@ -48,7 +48,8 @@ namespace Player
             if (!p.isServer) { return; }
             if (braking)
             {
-                charge += Mathf.Min(chargeRate * Time.deltaTime, maxCharge);
+                charge += chargeRate * Time.deltaTime;
+                charge = Mathf.Min(charge, maxCharge);
             }
         }
         void FixedUpdate()
@@ -166,6 +167,7 @@ namespace Player
         {
             yield return new WaitForSeconds(boostDuration);
             boosting = false;
+            charge = 0;
         }
         public void Brake()
         {
@@ -197,8 +199,11 @@ namespace Player
             if (isDebug)
             {
                 if (!p.isServer) return;
-                Rect rectPos = new Rect(400, 400, 100, 20);
-                GUI.Label(rectPos, string.Format("Speed: {0}", rb.velocity.magnitude));
+                GUIStyle bigStyle = new GUIStyle();
+                bigStyle.fontSize = 24;
+                bigStyle.fontStyle = FontStyle.Bold;
+                GUI.Label(new Rect(800, 600, 100, 20), string.Format("Speed: {0}", rb.velocity.magnitude), bigStyle);
+                GUI.Label(new Rect(10, 60, 100, 20), string.Format("Charge: {0}/{1}", charge, maxCharge), bigStyle);
             }
         }
 
