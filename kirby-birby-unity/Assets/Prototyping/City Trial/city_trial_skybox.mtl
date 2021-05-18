@@ -1,0 +1,35 @@
+# Blender MTL File: 'city_trial_skybox.blend'
+# Material Count: 3
+
+newmtl Skybox_1
+Ns 96.078431
+Ka 0.000000 0.000000 0.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 0
+map_Kd textures\\ad5dbeb9.png
+map_d textures\\ad5dbeb9.png
+
+newmtl Skybox_2
+Ns 96.078431
+Ka 0.000000 0.000000 0.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 0
+map_Kd textures\\c652bef9.png
+map_d textures\\c652bef9.png
+
+newmtl Skybox_3
+Ns 96.078431
+Ka 0.000000 0.000000 0.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 0
+map_Kd textures\\b8000b68.png
+map_d textures\\b8000b68.png
