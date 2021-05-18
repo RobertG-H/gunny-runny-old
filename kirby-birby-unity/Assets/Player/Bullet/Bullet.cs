@@ -1,13 +1,16 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Player;
+using Mirror;
 
-public class Bullet : MonoBehaviour
+public class Bullet : NetworkBehaviour
 {
     [SerializeField] float speed;
+
     void FixedUpdate()
     {
+        Debug.Log(isServer);
+        if (!isServer) { return; }
         Vector3 displacement = transform.forward * speed * Time.fixedDeltaTime;
         transform.Translate(displacement);
     }
