@@ -18,7 +18,8 @@ namespace Player
 
         public float distanceMult = 1f;
 
-        Vector3 offsetBaseDirection;
+        Vector3 offsetBasePosition;
+        Vector3 offsetBaseRotation;
         float additionalY = 0f;
         float xOffset = 0f;
         float zRotOffset = 0f;
@@ -28,27 +29,36 @@ namespace Player
         {
             cam = GetComponent<Camera>();
             startFOV = cam.fieldOfView;
+            offsetBasePosition = transform.localPosition;
+            offsetBaseRotation = transform.localEulerAngles;
         }
 
         void Start()
         {
-            offsetBaseDirection = transform.localPosition.normalized;
             lastFramePlayerYangle = playerTransfrom.eulerAngles.y;
         }
 
         void Update()
         {
-            HandleAngleLag();
-            HandleSpeedDip();
-            Vector3 newLocal = offsetBaseDirection * distance * distanceMult;
-            newLocal.y += additionalY;
-            newLocal.x = xOffset;
-            this.transform.localPosition = newLocal;
+            // HandleAngleLag();
+            // HandleSpeedDip();
+            // Vector3 newLocal = offsetBaseDirection * distance * distanceMult;
+            // newLocal.y += additionalY;
+            // newLocal.x = xOffset;
+            // this.transform.localPosition = newLocal;
 
-            Vector3 newRot = transform.localRotation.eulerAngles;
-            newRot.z = zRotOffset;
-            this.transform.localRotation = Quaternion.Euler(newRot);
-            HandleFOV();
+            // Vector3 newRot = transform.localRotation.eulerAngles;
+            // newRot.z = zRotOffset;
+            // this.transform.localRotation = Quaternion.Euler(newRot);
+            // HandleFOV();
+        }
+
+        void LateUpdate()
+        {
+            float playerYRot = playerTransfrom.eulerAngles.y;
+            Vector3 cameraDistance = Quaternion.AngleAxis(playerYRot, Vector3.up) * offsetBasePosition;
+            transform.position = playerTransfrom.position + cameraDistance;
+            transform.rotation = Quaternion.Euler(offsetBaseRotation.x, playerYRot, offsetBaseRotation.z);
         }
 
         void HandleAngleLag()

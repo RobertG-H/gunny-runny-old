@@ -116,6 +116,7 @@ namespace Player
         private void InitializeCamera()
         {
             playerCamera.SetActive(true);
+            playerCamera.transform.parent = null;
         }
 
         #region Interface methods

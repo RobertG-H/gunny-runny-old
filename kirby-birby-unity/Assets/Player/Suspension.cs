@@ -39,22 +39,21 @@ namespace Player
 
         void FixedUpdate()
         {
-            if (!networkParent.isServer)
+            if (!networkParent.isServer) return;
+            if (Physics.Raycast(transform.position, -localBasisVectors.up, out RaycastHit hit, maxLength + wheelRadius))
             {
-                if (Physics.Raycast(transform.position, -localBasisVectors.up, out RaycastHit hit, maxLength + wheelRadius))
-                {
-                    lastLength = springLength;
-                    springLength = hit.distance - wheelRadius;
-                    springLength = Mathf.Clamp(springLength, minLength, maxLength);
-                    springVelocity = (lastLength - springLength) / Time.fixedDeltaTime;
-                    springForce = springStiffness * (restLength - springLength);
-                    damperForce = damperStiffness * springVelocity;
+                lastLength = springLength;
+                springLength = hit.distance - wheelRadius;
+                springLength = Mathf.Clamp(springLength, minLength, maxLength);
+                springVelocity = (lastLength - springLength) / Time.fixedDeltaTime;
+                springForce = springStiffness * (restLength - springLength);
+                damperForce = damperStiffness * springVelocity;
 
-                    suspensionForce = (springForce + damperForce) * hit.normal;
+                suspensionForce = (springForce + damperForce) * hit.normal;
 
-                    rb.AddForceAtPosition(suspensionForce, hit.point);
-                }
+                rb.AddForceAtPosition(suspensionForce, hit.point);
             }
+
         }
     }
 }
