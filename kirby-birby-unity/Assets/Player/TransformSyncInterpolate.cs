@@ -9,9 +9,8 @@ using Mirror;
 /// </summary>
 public class TransformSyncInterpolate : NetworkBehaviour
 {
-    [SerializeField] Transform localBasisVectors;
     [SyncVar] private Vector3 syncPos;
-    [SyncVar] private float syncYRot;
+    [SyncVar] private Quaternion syncRot;
     private Vector3 lastPos;
     private Vector3 futurePos;
     private Quaternion lastRot;
@@ -23,7 +22,7 @@ public class TransformSyncInterpolate : NetworkBehaviour
     void Start()
     {
         lastPos = transform.position;
-        lastRot = localBasisVectors.rotation;
+        lastRot = transform.rotation;
     }
 
     void FixedUpdate()
@@ -34,13 +33,21 @@ public class TransformSyncInterpolate : NetworkBehaviour
         }
     }
 
+    void Update()
+    {
+        if (isClientOnly)
+        {
+            ApplyMotion();
+        }
+    }
+
     void TransmitMotion()
     {
-        if (Vector3.Distance(transform.position, lastPos) > posThreshold || Quaternion.Angle(localBasisVectors.rotation, lastRot) > rotThreshold)
+        if (Vector3.Distance(transform.position, lastPos) > posThreshold || Quaternion.Angle(transform.rotation, lastRot) > rotThreshold)
         {
             syncPos = transform.position;
-            syncYRot = localBasisVectors.localEulerAngles.y;
-            RpcApplyMotion();
+            syncRot = transform.rotation;
+            // RpcApplyMotion();
         }
     }
 
@@ -53,33 +60,39 @@ public class TransformSyncInterpolate : NetworkBehaviour
         LerpRotation();
     }
 
+    void ApplyMotion()
+    {
+        UpdateVelocity();
+        CalcDeadReckoning();
+        LerpPosition();
+        LerpRotation();
+    }
+
     void UpdateVelocity()
     {
-        Vector3 newVelocity = (transform.position - lastPos) / Time.fixedDeltaTime;
+        Vector3 newVelocity = (transform.position - lastPos) / Time.smoothDeltaTime;
         currentVelocity = Vector3.Lerp(currentVelocity, newVelocity, 0.2f);
     }
 
     void CalcDeadReckoning()
     {
-        futurePos = syncPos + (currentVelocity * Time.fixedDeltaTime);
+        futurePos = syncPos + (currentVelocity * Time.smoothDeltaTime);
     }
 
     void LerpPosition()
     {
         lastPos = transform.position;
-        transform.position = Vector3.Lerp(transform.position, futurePos, Time.fixedDeltaTime * lerpRate);
+        transform.position = Vector3.Lerp(transform.position, futurePos, Time.smoothDeltaTime * lerpRate);
     }
 
     void LerpRotation()
     {
-        lastRot = localBasisVectors.rotation;
-        Vector3 newRot = new Vector3(0, syncYRot, 0);
-        localBasisVectors.rotation = Quaternion.Lerp(localBasisVectors.rotation, Quaternion.Euler(newRot), Time.fixedDeltaTime * lerpRate);
+        lastRot = transform.rotation;
+        transform.rotation = Quaternion.Lerp(transform.rotation, syncRot, Time.smoothDeltaTime * lerpRate);
     }
 
     public Vector3 GetVelocity()
     {
         return currentVelocity;
     }
-
 }

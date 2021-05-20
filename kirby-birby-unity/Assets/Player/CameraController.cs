@@ -8,12 +8,15 @@ namespace Player
     {
         [SerializeField] Transform playerTransfrom;
         [SerializeField] PlayerController p;
-
         [SerializeField] float xOffsetMax = 0.3f;
         [SerializeField] float zRotOffsetMax = 2f;
         [SerializeField] float distance = 8f;
 
+        [SerializeField] float followSpeed = 0.2f;
+
         Camera cam;
+        Vector3 camVel = Vector3.zero;
+        Vector3 camVelRot = Vector3.zero;
         float startFOV;
 
         public float distanceMult = 1f;
@@ -57,8 +60,22 @@ namespace Player
         {
             float playerYRot = playerTransfrom.eulerAngles.y;
             Vector3 cameraDistance = Quaternion.AngleAxis(playerYRot, Vector3.up) * offsetBasePosition;
-            transform.position = playerTransfrom.position + cameraDistance;
-            transform.rotation = Quaternion.Euler(offsetBaseRotation.x, playerYRot, offsetBaseRotation.z);
+
+            Vector3 desiredPosition = playerTransfrom.position + cameraDistance;
+
+            Vector3 newPosition = Vector3.SmoothDamp(transform.position, desiredPosition, ref camVel, followSpeed);
+
+
+            // newPosition.x = desiredPosition.x;
+            // newPosition.y = Mathf.Lerp(transform.position.y, desiredPosition.y, followSpeed);
+            // newPosition.z = desiredPosition.z;
+
+            transform.position = desiredPosition;
+
+            Vector3 desiredRotation = new Vector3(offsetBaseRotation.x, playerYRot, offsetBaseRotation.z);
+            Vector3 newRotation = Vector3.SmoothDamp(transform.eulerAngles, desiredRotation, ref camVelRot, followSpeed);
+            // transform.rotation = Quaternion.Euler(newRotation);
+            transform.rotation = Quaternion.Euler(desiredRotation);
         }
 
         void HandleAngleLag()

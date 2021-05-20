@@ -164,6 +164,8 @@ Transform:
   - {fileID: 3331029244727284669}
   - {fileID: 7693220787450188524}
   - {fileID: 2786236436803162701}
+  - {fileID: 2275787898382807541}
+  - {fileID: 2189432335434147433}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -330,8 +332,8 @@ Rigidbody:
   m_AngularDrag: 0.05
   m_UseGravity: 1
   m_IsKinematic: 0
-  m_Interpolate: 2
-  m_Constraints: 0
+  m_Interpolate: 1
+  m_Constraints: 64
   m_CollisionDetection: 2
 --- !u!136 &3664121423414123073
 CapsuleCollider:
@@ -346,7 +348,7 @@ CapsuleCollider:
   m_Radius: 0.5
   m_Height: 4.11
   m_Direction: 2
-  m_Center: {x: 0, y: -1.76, z: 0.1}
+  m_Center: {x: 0, y: -1.76, z: 0}
 --- !u!114 &1853339535962404940
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -364,6 +366,108 @@ MonoBehaviour:
   modelAnimator: {fileID: 0}
   zRotOffsetMax: 15
   chargeSpeed: 0
+--- !u!1 &4528410276650498778
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2275787898382807541}
+  - component: {fileID: 4629554676137116966}
+  m_Layer: 0
+  m_Name: FrontSuspension
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2275787898382807541
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4528410276650498778}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: -2.062, z: 1.57}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 3688993058380937125}
+  m_RootOrder: 4
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4629554676137116966
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4528410276650498778}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 11168606f608cf34fb83b59a3fb7ec5d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rb: {fileID: 8851108855319455284}
+  localBasisVectors: {fileID: 3688993058380937125}
+  networkParent: {fileID: 8167003266192321013}
+  restLength: 0.5
+  springTravel: 0.5
+  springStiffness: 24000
+  damperStiffness: 1200
+  wheelRadius: 0.33
+--- !u!1 &7264457720883271722
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2189432335434147433}
+  - component: {fileID: 373831717052466035}
+  m_Layer: 0
+  m_Name: RearSuspension
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2189432335434147433
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7264457720883271722}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: -2.062, z: -1.605}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 3688993058380937125}
+  m_RootOrder: 5
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &373831717052466035
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7264457720883271722}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 11168606f608cf34fb83b59a3fb7ec5d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rb: {fileID: 8851108855319455284}
+  localBasisVectors: {fileID: 3688993058380937125}
+  networkParent: {fileID: 8167003266192321013}
+  restLength: 0.5
+  springTravel: 0.5
+  springStiffness: 24000
+  damperStiffness: 1200
+  wheelRadius: 0.33
 --- !u!1 &8192412780390545243
 GameObject:
   m_ObjectHideFlags: 0
@@ -375,7 +479,7 @@ GameObject:
   - component: {fileID: 7693220787450188524}
   - component: {fileID: 1964131664966835296}
   - component: {fileID: 7264071668574545054}
-  - component: {fileID: 8905962514015698155}
+  - component: {fileID: 3339257663722259055}
   m_Layer: 6
   m_Name: PlayerCamera
   m_TagString: Untagged
@@ -448,7 +552,7 @@ AudioListener:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8192412780390545243}
   m_Enabled: 1
---- !u!114 &8905962514015698155
+--- !u!114 &3339257663722259055
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -465,6 +569,7 @@ MonoBehaviour:
   xOffsetMax: 0.3
   zRotOffsetMax: 2
   distance: 8
+  followSpeed: 0.2
   distanceMult: 1
 --- !u!1001 &2386919053397226918
 PrefabInstance:
