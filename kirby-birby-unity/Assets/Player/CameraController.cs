@@ -8,6 +8,7 @@ namespace Player
     {
         [SerializeField] Transform playerTransfrom;
         [SerializeField] PlayerController p;
+        [SerializeField] bool enableJuice = false;
         [SerializeField] float xOffsetMax = 0.3f;
         [SerializeField] float zRotOffsetMax = 2f;
         [SerializeField] bool doLagBehindTarget = false;
@@ -32,17 +33,21 @@ namespace Player
         void LateUpdate()
         {
             FollowTarget();
-            HandleAngleLag();
-            HandleFOV();
+            if (enableJuice)
+            {
+                HandleAngleLag();
+                HandleFOV();
 
-            Vector3 newPosition = transform.position;
-            Vector3 horizontalMove = transform.right * xOffset;
-            newPosition += horizontalMove;
-            transform.position = newPosition;
+                Vector3 newPosition = transform.position;
+                Vector3 horizontalMove = transform.right * xOffset;
+                newPosition += horizontalMove;
+                transform.position = newPosition;
 
-            Vector3 newRot = transform.localRotation.eulerAngles;
-            newRot.z = zRotOffset;
-            this.transform.localRotation = Quaternion.Euler(newRot);
+                Vector3 newRot = transform.localRotation.eulerAngles;
+                newRot.z = zRotOffset;
+                this.transform.localRotation = Quaternion.Euler(newRot);
+            }
+
         }
         void FollowTarget()
         {
@@ -84,7 +89,10 @@ namespace Player
         void HandleFOV()
         {
             float speedMult = Mathf.Clamp01(p.GetSpeed() * 0.01f) + 1;
-            cam.fieldOfView = startFOV * speedMult;
+            float newFov = startFOV * speedMult;
+            float fovChangeThreshold = 3f;
+            if (Mathf.Abs(newFov - cam.fieldOfView) > fovChangeThreshold)
+                cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, newFov, 0.2f);
         }
     }
 }
