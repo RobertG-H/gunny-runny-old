@@ -58,6 +58,7 @@ namespace Player
 
         void LateUpdate()
         {
+            float playerXRot = playerTransfrom.eulerAngles.x;
             float playerYRot = playerTransfrom.eulerAngles.y;
             Vector3 cameraDistance = Quaternion.AngleAxis(playerYRot, Vector3.up) * offsetBasePosition;
 
@@ -72,7 +73,7 @@ namespace Player
 
             transform.position = desiredPosition;
 
-            Vector3 desiredRotation = new Vector3(offsetBaseRotation.x, playerYRot, offsetBaseRotation.z);
+            Vector3 desiredRotation = new Vector3(playerXRot + offsetBaseRotation.x, playerYRot, offsetBaseRotation.z);
             Vector3 newRotation = Vector3.SmoothDamp(transform.eulerAngles, desiredRotation, ref camVelRot, followSpeed);
             // transform.rotation = Quaternion.Euler(newRotation);
             transform.rotation = Quaternion.Euler(desiredRotation);
