@@ -40,6 +40,9 @@ namespace Player
         void FixedUpdate()
         {
             if (!networkParent.isServer) return;
+            Debug.DrawRay(transform.position, -localBasisVectors.up * (maxLength + wheelRadius), Color.yellow);
+            Debug.DrawRay(transform.position, -localBasisVectors.up * (restLength + wheelRadius), Color.green);
+
             if (Physics.Raycast(transform.position, -localBasisVectors.up, out RaycastHit hit, maxLength + wheelRadius))
             {
                 lastLength = springLength;
@@ -52,6 +55,8 @@ namespace Player
                 suspensionForce = (springForce + damperForce) * hit.normal;
 
                 rb.AddForceAtPosition(suspensionForce, hit.point);
+                Debug.DrawRay(transform.position, -localBasisVectors.up * (hit.distance), Color.red);
+
             }
 
         }

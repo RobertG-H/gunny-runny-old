@@ -42,6 +42,8 @@ namespace Player
                 Destroy(rb);
                 return;
             }
+            rb.centerOfMass = Vector3.zero;
+            rb.inertiaTensorRotation = Quaternion.identity;
         }
         void Update()
         {
@@ -56,8 +58,8 @@ namespace Player
         {
             if (!p.isServer) { return; }
             ApplyAcceleration(p.iHorz);
+            LockZRotation();
         }
-
         #region Private movement methods
         private void ApplyAcceleration(float iHorz)
         {
@@ -133,6 +135,11 @@ namespace Player
             {
                 rb.angularVelocity = localBasisVectors.up * maxAngularSpeed * iHorz;
             }
+        }
+
+        private void LockZRotation()
+        {
+            rb.rotation = Quaternion.Euler(rb.rotation.eulerAngles.x, rb.rotation.eulerAngles.y, 0);
         }
 
         private float GetMaxCentripetalAcceleration()
