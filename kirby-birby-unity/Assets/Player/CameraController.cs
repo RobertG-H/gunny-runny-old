@@ -92,7 +92,7 @@ namespace Player
             float newFov = startFOV * speedMult;
             float fovChangeThreshold = 3f;
             if (Mathf.Abs(newFov - cam.fieldOfView) > fovChangeThreshold)
-                cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, newFov, 0.2f);
+                cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, newFov, 0.02f);
         }
     }
 }

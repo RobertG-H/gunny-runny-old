@@ -216,7 +216,7 @@ MonoBehaviour:
   syncMode: 0
   syncInterval: 0.05
   currentVelocity: {x: 0, y: 0, z: 0}
-  lerpRate: 8
+  lerpRate: 25
   posThreshold: 0.1
   rotThreshold: 0.1
 --- !u!54 &8851108855319455284
