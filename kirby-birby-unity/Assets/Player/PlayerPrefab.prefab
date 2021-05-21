@@ -466,9 +466,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerTransfrom: {fileID: 3688993058380937125}
   p: {fileID: 8167003266192321013}
-  xOffsetMax: 0.3
-  zRotOffsetMax: 2
+  xOffsetMax: 0.6
+  zRotOffsetMax: 4
   distance: 8
+  doLagBehindTarget: 0
   followSpeed: 0.2
   distanceMult: 1
 --- !u!1001 &2386919053397226918

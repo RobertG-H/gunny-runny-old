@@ -10,23 +10,16 @@ namespace Player
         [SerializeField] PlayerController p;
         [SerializeField] float xOffsetMax = 0.3f;
         [SerializeField] float zRotOffsetMax = 2f;
-        [SerializeField] float distance = 8f;
-
+        [SerializeField] bool doLagBehindTarget = false;
         [SerializeField] float followSpeed = 0.2f;
-
         Camera cam;
         Vector3 camVel = Vector3.zero;
         Vector3 camVelRot = Vector3.zero;
         float startFOV;
-
-        public float distanceMult = 1f;
-
         Vector3 offsetBasePosition;
         Vector3 offsetBaseRotation;
-        float additionalY = 0f;
         float xOffset = 0f;
         float zRotOffset = 0f;
-        float lastFramePlayerYangle;
 
         void Awake()
         {
@@ -36,66 +29,56 @@ namespace Player
             offsetBaseRotation = transform.localEulerAngles;
         }
 
-        void Start()
-        {
-            lastFramePlayerYangle = playerTransfrom.eulerAngles.y;
-        }
-
-        void Update()
-        {
-            // HandleAngleLag();
-            // HandleSpeedDip();
-            // Vector3 newLocal = offsetBaseDirection * distance * distanceMult;
-            // newLocal.y += additionalY;
-            // newLocal.x = xOffset;
-            // this.transform.localPosition = newLocal;
-
-            // Vector3 newRot = transform.localRotation.eulerAngles;
-            // newRot.z = zRotOffset;
-            // this.transform.localRotation = Quaternion.Euler(newRot);
-            // HandleFOV();
-        }
-
         void LateUpdate()
+        {
+            FollowTarget();
+            HandleAngleLag();
+            HandleFOV();
+
+            Vector3 newPosition = transform.position;
+            Vector3 horizontalMove = transform.right * xOffset;
+            newPosition += horizontalMove;
+            transform.position = newPosition;
+
+            Vector3 newRot = transform.localRotation.eulerAngles;
+            newRot.z = zRotOffset;
+            this.transform.localRotation = Quaternion.Euler(newRot);
+        }
+        void FollowTarget()
         {
             float playerXRot = playerTransfrom.eulerAngles.x;
             float playerYRot = playerTransfrom.eulerAngles.y;
             Vector3 cameraDistance = Quaternion.AngleAxis(playerYRot, Vector3.up) * offsetBasePosition;
 
             Vector3 desiredPosition = playerTransfrom.position + cameraDistance;
-
-            Vector3 newPosition = Vector3.SmoothDamp(transform.position, desiredPosition, ref camVel, followSpeed);
-
-
-            // newPosition.x = desiredPosition.x;
-            // newPosition.y = Mathf.Lerp(transform.position.y, desiredPosition.y, followSpeed);
-            // newPosition.z = desiredPosition.z;
-
-            transform.position = desiredPosition;
+            if (doLagBehindTarget)
+            {
+                Vector3 newPosition = Vector3.SmoothDamp(transform.position, desiredPosition, ref camVel, followSpeed);
+                transform.position = newPosition;
+            }
+            else
+            {
+                transform.position = desiredPosition;
+            }
 
             Vector3 desiredRotation = new Vector3(playerXRot + offsetBaseRotation.x, playerYRot, offsetBaseRotation.z);
-            Vector3 newRotation = Vector3.SmoothDamp(transform.eulerAngles, desiredRotation, ref camVelRot, followSpeed);
-            // transform.rotation = Quaternion.Euler(newRotation);
-            transform.rotation = Quaternion.Euler(desiredRotation);
-        }
+            if (doLagBehindTarget)
+            {
+                Vector3 newRotation = Vector3.SmoothDamp(transform.eulerAngles, desiredRotation, ref camVelRot, followSpeed);
+                transform.rotation = Quaternion.Euler(newRotation);
 
+            }
+            else
+            {
+                transform.rotation = Quaternion.Euler(desiredRotation);
+            }
+        }
         void HandleAngleLag()
         {
             float turnAmount = p.iHorz;
             xOffset = Mathf.Lerp(xOffset, xOffsetMax * turnAmount, 0.1f);
             float inverseTurnAmount = turnAmount * -1;
             zRotOffset = Mathf.Lerp(zRotOffset, zRotOffsetMax * inverseTurnAmount, 0.1f);
-        }
-
-        void HandleSpeedDip()
-        {
-            float speedDipMult = Mathf.Clamp01(p.GetSpeed() * 0.03333f);
-            Debug.Log(speedDipMult);
-            speedDipMult *= speedDipMult * speedDipMult;
-
-            distanceMult = 1f + speedDipMult * 0.3f;
-
-            // additionalY = -speedDipMult * 4f;
         }
 
         void HandleFOV()
