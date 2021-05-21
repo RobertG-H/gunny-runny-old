@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Player
 {
-    public class PlayerPhysics : MonoBehaviour
+    public class PlayerPhysics : MonoBehaviour, IReceivePowerUpPatches
     {
         public PlayerController p;
         [SerializeField] Rigidbody rb;
@@ -198,6 +198,45 @@ namespace Player
         {
             return rb.velocity;
         }
+        #endregion
+
+        #region PowerUp Patches
+
+        void IReceivePowerUpPatches.TopSpeedIncrease()
+        {
+            Debug.Log("Got topspeed");
+            topSpeed += 1;
+            boostTopSpeed += 1;
+            acceleration += 0.5f;
+        }
+
+        void IReceivePowerUpPatches.TurnIncrease()
+        {
+            if (turnRadius > 2)
+                turnRadius -= 1;
+        }
+
+        void IReceivePowerUpPatches.ChargeRateIncrease()
+        {
+            chargeRate += 1;
+        }
+
+        void IReceivePowerUpPatches.BoostIncrease()
+        {
+            boostTopSpeed += 1;
+            boostAcceleration += 1;
+        }
+
+        void IReceivePowerUpPatches.HPIncrease()
+        {
+
+        }
+
+        void IReceivePowerUpPatches.DamageIncrease()
+        {
+
+        }
+
         #endregion
 
         #region Debug
