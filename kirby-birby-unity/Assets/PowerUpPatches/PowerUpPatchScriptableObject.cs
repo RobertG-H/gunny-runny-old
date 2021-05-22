@@ -6,5 +6,5 @@ using UnityEngine;
 public class PowerUpPatchScriptableObject : ScriptableObject
 {
     public PowerUpPatches powerUpName;
-    public Sprite graphic;
+    public int patchSpriteIndex;
 }

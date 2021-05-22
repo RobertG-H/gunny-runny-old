@@ -38,6 +38,8 @@ public class PowerUpPatchSpawner : NetworkBehaviour
     {
         GameObject newPatch = Instantiate(patchPrefab, GetRandomSpawnPoint(), Quaternion.identity);
         NetworkServer.Spawn(newPatch);
-        newPatch.GetComponent<PowerUpPatch>().Initialize(GetRandomPatchValues());
+        PowerUpPatchScriptableObject randomValues = GetRandomPatchValues();
+        newPatch.GetComponent<PowerUpPatch>().RpcInitialize(randomValues);
+        newPatch.GetComponent<PowerUpPatch>().ServerInitialize(randomValues);
     }
 }

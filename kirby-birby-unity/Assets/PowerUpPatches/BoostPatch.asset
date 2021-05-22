@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: BoostPatch
   m_EditorClassIdentifier: 
   powerUpName: 3
-  graphic: {fileID: -8245037643686378407, guid: 4ea623c26002bf048ba96f943082d75d, type: 3}
+  patchSpriteIndex: 3
