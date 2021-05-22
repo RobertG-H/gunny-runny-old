@@ -9,7 +9,6 @@ public class Bullet : NetworkBehaviour
 
     void FixedUpdate()
     {
-        Debug.Log(isServer);
         if (!isServer) { return; }
         Vector3 displacement = transform.forward * speed * Time.fixedDeltaTime;
         transform.Translate(displacement);

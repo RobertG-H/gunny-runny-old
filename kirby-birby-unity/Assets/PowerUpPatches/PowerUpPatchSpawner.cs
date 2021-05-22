@@ -12,9 +12,19 @@ public class PowerUpPatchSpawner : NetworkBehaviour
 
     [SerializeField] float patchesPerSecond;
 
+    void Awake()
+    {
+        CustomNetworkManager.OnServerStarted += ServerStartedHandler;
+    }
+
     void Start()
     {
         bounds = col.bounds;
+    }
+
+    public void ServerStartedHandler(CustomNetworkManager netMan)
+    {
+        StartSpawning();
     }
 
     public void StartSpawning()

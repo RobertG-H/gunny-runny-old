@@ -7,7 +7,6 @@ public class ProjectileCollider : MonoBehaviour
     [SerializeField] GameObject objectToDestroy;
     public void OnTriggerEnter(Collider other)
     {
-        // Debug.Log(other.ToString());
         if (other.CompareTag("Player"))
         {
             Damageable damageable = other.GetComponent<Damageable>();
