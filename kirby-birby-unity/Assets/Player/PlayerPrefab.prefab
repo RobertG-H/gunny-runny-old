@@ -467,8 +467,8 @@ MonoBehaviour:
   playerTransfrom: {fileID: 3688993058380937125}
   p: {fileID: 8167003266192321013}
   enableJuice: 1
-  xOffsetMax: 0.6
-  zRotOffsetMax: 4
+  xOffsetMax: 0.2
+  zRotOffsetMax: 2
   doLagBehindTarget: 0
   followSpeed: 0.2
 --- !u!1001 &2386919053397226918

@@ -111,8 +111,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e173d750b43517344874c93d20a4a3da, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  syncMode: 0
+  syncInterval: 0.1
   powerUpPatchValues: {fileID: 11400000, guid: d96ce73f0e7547e41baf0d896736d825, type: 2}
   fallSpeed: 5
+  duration: 20
 --- !u!65 &729811877749207102
 BoxCollider:
   m_ObjectHideFlags: 0

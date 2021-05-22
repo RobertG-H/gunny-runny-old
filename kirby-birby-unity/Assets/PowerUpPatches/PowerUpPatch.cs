@@ -17,9 +17,11 @@ public class PowerUpPatch : NetworkBehaviour
 {
     [SerializeField] PowerUpPatchScriptableObject powerUpPatchValues;
     [SerializeField] float fallSpeed;
+    [SerializeField] float duration;
     Collider col;
     SpriteRenderer sr;
     int layerMask;
+    bool landed = false;
     void Awake()
     {
         col = GetComponent<Collider>();
@@ -35,11 +37,13 @@ public class PowerUpPatch : NetworkBehaviour
     {
         this.powerUpPatchValues = powerUpPatchValues;
         sr.sprite = powerUpPatchValues.graphic;
+        StartCoroutine(DeathTimer());
     }
 
     void Update()
     {
-        if (!isServer) { return; }
+        if (!isServer) return;
+        if (landed) return;
         if (!IsGrounded())
         {
             Vector3 displacement = Vector3.down * fallSpeed * Time.deltaTime;
@@ -55,6 +59,7 @@ public class PowerUpPatch : NetworkBehaviour
 
         if (Physics.Raycast(raycastOrigin, Vector3.down, out RaycastHit hit, fallSpeed * Time.deltaTime + skinWidth, layerMask))
         {
+            landed = true;
             return true;
         }
         return false;
@@ -83,5 +88,14 @@ public class PowerUpPatch : NetworkBehaviour
             }
         }
         Destroy(gameObject);
+    }
+
+    IEnumerator DeathTimer()
+    {
+        while (true)
+        {
+            yield return new WaitForSeconds(duration);
+            Destroy(gameObject);
+        }
     }
 }

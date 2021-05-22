@@ -32,16 +32,16 @@ namespace Player
 
         void LateUpdate()
         {
-            FollowTarget();
+            // FollowTarget();
             if (enableJuice)
             {
                 HandleAngleLag();
                 HandleFOV();
 
-                Vector3 newPosition = transform.position;
+                Vector3 newPosition = offsetBasePosition;
                 Vector3 horizontalMove = transform.right * xOffset;
                 newPosition += horizontalMove;
-                transform.position = newPosition;
+                transform.localPosition = newPosition;
 
                 Vector3 newRot = transform.localRotation.eulerAngles;
                 newRot.z = zRotOffset;
