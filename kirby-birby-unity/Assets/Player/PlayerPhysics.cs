@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Player
 {
-    public class PlayerPhysics : MonoBehaviour
+    public class PlayerPhysics : MonoBehaviour, IReceivePowerUpPatches
     {
         public PlayerController p;
         [SerializeField] Rigidbody rb;
@@ -42,21 +42,24 @@ namespace Player
                 Destroy(rb);
                 return;
             }
+            rb.centerOfMass = Vector3.zero;
+            rb.inertiaTensorRotation = Quaternion.identity;
         }
         void Update()
         {
             if (!p.isServer) { return; }
             if (braking)
             {
-                charge += Mathf.Min(chargeRate * Time.deltaTime, maxCharge);
+                charge += chargeRate * Time.deltaTime;
+                charge = Mathf.Min(charge, maxCharge);
             }
         }
         void FixedUpdate()
         {
             if (!p.isServer) { return; }
             ApplyAcceleration(p.iHorz);
+            LockZRotation();
         }
-
         #region Private movement methods
         private void ApplyAcceleration(float iHorz)
         {
@@ -131,8 +134,12 @@ namespace Player
             if (braking && rb.velocity.sqrMagnitude < (LOW_SPEED_TURN_THRESHOLD * LOW_SPEED_TURN_THRESHOLD))
             {
                 rb.angularVelocity = localBasisVectors.up * maxAngularSpeed * iHorz;
-                Debug.Log("Using override");
             }
+        }
+
+        private void LockZRotation()
+        {
+            rb.rotation = Quaternion.Euler(rb.rotation.eulerAngles.x, rb.rotation.eulerAngles.y, 0);
         }
 
         private float GetMaxCentripetalAcceleration()
@@ -167,6 +174,7 @@ namespace Player
         {
             yield return new WaitForSeconds(boostDuration);
             boosting = false;
+            charge = 0;
         }
         public void Brake()
         {
@@ -184,14 +192,64 @@ namespace Player
 
         #endregion
 
+        #region Public Getters
+
+        public Vector3 GetVelocity()
+        {
+            return rb.velocity;
+        }
+        #endregion
+
+        #region PowerUp Patches
+
+        void IReceivePowerUpPatches.TopSpeedIncrease()
+        {
+            Debug.Log("Got topspeed");
+            topSpeed += 1;
+            boostTopSpeed += 1;
+            acceleration += 0.5f;
+        }
+
+        void IReceivePowerUpPatches.TurnIncrease()
+        {
+            if (turnRadius > 2)
+                turnRadius -= 1;
+        }
+
+        void IReceivePowerUpPatches.ChargeRateIncrease()
+        {
+            chargeRate += 1;
+        }
+
+        void IReceivePowerUpPatches.BoostIncrease()
+        {
+            boostTopSpeed += 1;
+            boostAcceleration += 1;
+        }
+
+        void IReceivePowerUpPatches.HPIncrease()
+        {
+
+        }
+
+        void IReceivePowerUpPatches.DamageIncrease()
+        {
+
+        }
+
+        #endregion
+
         #region Debug
         void OnGUI()
         {
             if (isDebug)
             {
                 if (!p.isServer) return;
-                Rect rectPos = new Rect(400, 400, 100, 20);
-                GUI.Label(rectPos, string.Format("Speed: {0}", rb.velocity.magnitude));
+                GUIStyle bigStyle = new GUIStyle();
+                bigStyle.fontSize = 24;
+                bigStyle.fontStyle = FontStyle.Bold;
+                GUI.Label(new Rect(800, 600, 100, 20), string.Format("Speed: {0}", rb.velocity.magnitude), bigStyle);
+                GUI.Label(new Rect(10, 60, 100, 20), string.Format("Charge: {0}/{1}", charge, maxCharge), bigStyle);
             }
         }
 
