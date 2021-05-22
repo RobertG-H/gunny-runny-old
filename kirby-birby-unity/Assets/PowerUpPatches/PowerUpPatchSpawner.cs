@@ -12,9 +12,19 @@ public class PowerUpPatchSpawner : NetworkBehaviour
 
     [SerializeField] float patchesPerSecond;
 
+    void Awake()
+    {
+        CustomNetworkManager.OnServerStarted += ServerStartedHandler;
+    }
+
     void Start()
     {
         bounds = col.bounds;
+    }
+
+    public void ServerStartedHandler(CustomNetworkManager netMan)
+    {
+        StartSpawning();
     }
 
     public void StartSpawning()
@@ -38,6 +48,8 @@ public class PowerUpPatchSpawner : NetworkBehaviour
     {
         GameObject newPatch = Instantiate(patchPrefab, GetRandomSpawnPoint(), Quaternion.identity);
         NetworkServer.Spawn(newPatch);
-        newPatch.GetComponent<PowerUpPatch>().Initialize(GetRandomPatchValues());
+        PowerUpPatchScriptableObject randomValues = GetRandomPatchValues();
+        newPatch.GetComponent<PowerUpPatch>().RpcInitialize(randomValues);
+        newPatch.GetComponent<PowerUpPatch>().ServerInitialize(randomValues);
     }
 }

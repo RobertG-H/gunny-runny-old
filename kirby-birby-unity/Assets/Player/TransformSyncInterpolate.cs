@@ -11,6 +11,9 @@ public class TransformSyncInterpolate : NetworkBehaviour
 {
     [SyncVar] private Vector3 syncPos;
     [SyncVar] private Quaternion syncRot;
+    [SerializeField] bool doSyncPos = true;
+    [SerializeField] bool doSyncRot = true;
+
     private Vector3 lastPos;
     private Vector3 futurePos;
     private Quaternion lastRot;
@@ -45,27 +48,18 @@ public class TransformSyncInterpolate : NetworkBehaviour
     {
         if (Vector3.Distance(transform.position, lastPos) > posThreshold || Quaternion.Angle(transform.rotation, lastRot) > rotThreshold)
         {
-            syncPos = transform.position;
-            syncRot = transform.rotation;
-            // RpcApplyMotion();
+            if (doSyncPos) syncPos = transform.position;
+            if (doSyncRot) syncRot = transform.rotation;
         }
     }
 
-    [ClientRpc]
-    void RpcApplyMotion()
-    {
-        UpdateVelocity();
-        CalcDeadReckoning();
-        LerpPosition();
-        LerpRotation();
-    }
 
     void ApplyMotion()
     {
         UpdateVelocity();
         CalcDeadReckoning();
-        LerpPosition();
-        LerpRotation();
+        if (doSyncPos) LerpPosition();
+        if (doSyncRot) LerpRotation();
     }
 
     void UpdateVelocity()

@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: ChargePatch
   m_EditorClassIdentifier: 
   powerUpName: 2
-  graphic: {fileID: -2592027889449539237, guid: 4ea623c26002bf048ba96f943082d75d, type: 3}
+  patchSpriteIndex: 2

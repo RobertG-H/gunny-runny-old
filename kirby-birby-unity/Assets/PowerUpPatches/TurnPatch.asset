@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: TurnPatch
   m_EditorClassIdentifier: 
   powerUpName: 1
-  graphic: {fileID: 7700688333856912243, guid: 4ea623c26002bf048ba96f943082d75d, type: 3}
+  patchSpriteIndex: 1

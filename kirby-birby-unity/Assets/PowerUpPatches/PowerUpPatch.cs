@@ -18,6 +18,7 @@ public class PowerUpPatch : NetworkBehaviour
     [SerializeField] PowerUpPatchScriptableObject powerUpPatchValues;
     [SerializeField] float fallSpeed;
     [SerializeField] float duration;
+    [SerializeField] List<Sprite> patchSprites;
     Collider col;
     SpriteRenderer sr;
     int layerMask;
@@ -29,17 +30,24 @@ public class PowerUpPatch : NetworkBehaviour
     }
     void Start()
     {
+        if (!isServer) return;
         layerMask = 1 << LayerMask.NameToLayer("PowerUpPatch");
         layerMask = ~layerMask;
-    }
-
-    public void Initialize(PowerUpPatchScriptableObject powerUpPatchValues)
-    {
-        this.powerUpPatchValues = powerUpPatchValues;
-        sr.sprite = powerUpPatchValues.graphic;
         StartCoroutine(DeathTimer());
     }
 
+    [ClientRpc]
+    public void RpcInitialize(PowerUpPatchScriptableObject powerUpPatchValues)
+    {
+        this.powerUpPatchValues = powerUpPatchValues;
+        sr.sprite = patchSprites[powerUpPatchValues.patchSpriteIndex];
+    }
+
+    public void ServerInitialize(PowerUpPatchScriptableObject powerUpPatchValues)
+    {
+        this.powerUpPatchValues = powerUpPatchValues;
+        sr.sprite = patchSprites[powerUpPatchValues.patchSpriteIndex];
+    }
     void Update()
     {
         if (!isServer) return;
@@ -67,6 +75,7 @@ public class PowerUpPatch : NetworkBehaviour
 
     public void OnTriggerEnter(Collider other)
     {
+        if (!isServer) return;
         if (other.CompareTag("Player"))
         {
             IReceivePowerUpPatches target = other.GetComponent<IReceivePowerUpPatches>();

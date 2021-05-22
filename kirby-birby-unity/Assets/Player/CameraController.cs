@@ -36,7 +36,7 @@ namespace Player
             if (enableJuice)
             {
                 HandleAngleLag();
-                HandleFOV();
+                // HandleFOV();
 
                 Vector3 newPosition = offsetBasePosition;
                 Vector3 horizontalMove = transform.right * xOffset;
