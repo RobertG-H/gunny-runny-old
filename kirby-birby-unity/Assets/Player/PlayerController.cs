@@ -13,6 +13,7 @@ namespace Player
         [SerializeField] private TransformSyncInterpolate transformSyncInterpolate;
         [SerializeField] private Renderer model;
         [SerializeField] private GameObject playerCamera;
+        [SerializeField] HealthBar healthBar;
 
         [ReadOnly]
         public float iHorz;
@@ -38,6 +39,7 @@ namespace Player
         {
             playerCamera.SetActive(false);
             currentHealth = maxHealth;
+            healthBar.SetMaxHealth(maxHealth);
         }
 
         #region Networking methods
@@ -110,6 +112,7 @@ namespace Player
         void Damageable.TakeDamage(float amount)
         {
             currentHealth -= amount;
+            healthBar.SetHealth(currentHealth);
             if (currentHealth <= 0)
             {
                 Debug.Log("Dead!");
