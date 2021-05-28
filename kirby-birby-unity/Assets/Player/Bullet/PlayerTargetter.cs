@@ -40,7 +40,7 @@ public class PlayerTargetter : NetworkBehaviour
         {
             if (hitCollider.CompareTag("Player"))
             {
-                Debug.Log(string.Format("{0} found player: {1}", gameObject.ToString(), hitCollider.gameObject.ToString()));
+                // Debug.Log(string.Format("{0} found player: {1}", gameObject.ToString(), hitCollider.gameObject.ToString()));
                 if (hitCollider.gameObject == this.gameObject) return;
                 foundPlayer = true;
                 targetPlayer = hitCollider.transform;
