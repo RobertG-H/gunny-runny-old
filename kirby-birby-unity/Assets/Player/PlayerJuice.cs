@@ -10,7 +10,6 @@ namespace Player
     {
         [SerializeField] PlayerController p;
         [SerializeField] Transform modelTransform;
-        [SerializeField] Animator modelAnimator;
         [SerializeField] float zRotOffsetMax = 15f;
         [SerializeField] float chargeSpeed;
         float zRotOffset = 0f;
@@ -29,21 +28,6 @@ namespace Player
             Vector3 newRot = modelTransform.localRotation.eulerAngles;
             newRot.z = zRotOffset;
             modelTransform.localRotation = Quaternion.Euler(newRot);
-        }
-        public void OnCharge()
-        {
-            // modelAnimator.SetFloat("ActionSpeed", chargeSpeed);
-            // modelAnimator.SetTrigger("Charge");
-        }
-
-        public void OnBoost()
-        {
-            // modelAnimator.SetTrigger("Boost");
-        }
-
-        public void OnIdle()
-        {
-            // modelAnimator.SetTrigger("Idle");
         }
     }
 }
