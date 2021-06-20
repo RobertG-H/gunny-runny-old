@@ -22,7 +22,7 @@ namespace Player
 
         void LeanModel()
         {
-            float inverseTurnAmount = p.iHorz * -1;
+            float inverseTurnAmount = p.iHorz * 1;
             zRotOffset = Mathf.Lerp(zRotOffset, zRotOffsetMax * inverseTurnAmount, 0.1f);
 
             Vector3 newRot = modelTransform.localRotation.eulerAngles;

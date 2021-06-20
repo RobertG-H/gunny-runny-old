@@ -13,10 +13,14 @@ namespace Player
         [SerializeField] private TransformSyncInterpolate transformSyncInterpolate;
         [SerializeField] private Renderer model;
         [SerializeField] private GameObject playerCamera;
+        [SerializeField] private GameObject pointer;
 
         [ReadOnly]
         public float iHorz;
 
+        [ReadOnly]
+        public float iVert;
+        
         #region Gameplay vars
         [SerializeField] float maxHealth;
         [ReadOnly, SerializeField] float currentHealth;
@@ -62,9 +66,10 @@ namespace Player
         }
 
         [Command]
-        void CmdSendInputs(float iHorz)
+        void CmdSendInputs(float iHorz, float iVert)
         {
             this.iHorz = iHorz;
+            this.iVert = iVert;
         }
 
         [Command]
@@ -85,7 +90,14 @@ namespace Player
         {
             if (!isLocalPlayer) return;
             iHorz = context.ReadValue<float>();
-            CmdSendInputs(iHorz);
+            CmdSendInputs(iHorz, iVert);
+        }
+
+        public void OnVertical(InputAction.CallbackContext context)
+        {
+            if (!isLocalPlayer) return;
+            iVert = context.ReadValue<float>();
+            CmdSendInputs(iHorz, iVert);
         }
         public void OnCharge(InputAction.CallbackContext context)
         {

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Mirror;
 
 namespace Player
 {
@@ -9,6 +10,7 @@ namespace Player
         public PlayerController p;
         [SerializeField] Rigidbody rb;
         [SerializeField] Transform localBasisVectors;
+        [SerializeField] GlidePointer glidePointer;
 
         #region Movement properties
         [Header("Movement properties")]
@@ -20,15 +22,24 @@ namespace Player
         public float boostAcceleration;
         public float boostTopSpeed;
         public float naturalDeceleration;
+        public float glideAcceleration;
+        public float glideBreakAcceleration;
+        public float maxGlideSpeed;
+        public float pitchRate;
+        public float GROUNDED_CHECK_DIST;
+        public float MIN_PITCH, MAX_PITCH;
         public float LOW_SPEED_TURN_THRESHOLD;
         #endregion
 
         #region Local state
         private bool braking;
+        private bool isGrounded;
         private float charge;
         public float chargeRate, maxCharge;
         private bool boosting;
+        private Vector3 eulerAngles;
         private IEnumerator boostTimer;
+        private float targetPitch;
         #endregion
 
         #region Debug
@@ -57,8 +68,21 @@ namespace Player
         void FixedUpdate()
         {
             if (!p.isServer) { return; }
+
+            eulerAngles = GetEulerAngles();
+            targetPitch = CalculateTargetPitch(p.iVert);
+            glidePointer.RotatePointer(targetPitch);
+
+            CheckGrounded();
+            if(!isGrounded) {
+                Glide(p.iHorz, p.iVert);
+            }
+
             ApplyAcceleration(p.iHorz);
+            
             LockZRotation();
+
+            ApplyRotation();
         }
         #region Private movement methods
         private void ApplyAcceleration(float iHorz)
@@ -82,7 +106,7 @@ namespace Player
 
             // Standard forward propulsion force
             Vector3 forwardAccel = localBasisVectors.forward * accelToUse;
-            if (braking)
+            if (braking && isGrounded)
             {
                 forwardAccel = rb.velocity.normalized * brakingAcceleration;
             }
@@ -100,7 +124,7 @@ namespace Player
             rb.velocity = Vector3.ClampMagnitude(rb.velocity, boostTopSpeed);
 
             // Stop player when braking and at low velocity
-            if (braking)
+            if (braking && isGrounded)
             {
                 if (rb.velocity.sqrMagnitude < 0.1)
                 {
@@ -137,9 +161,66 @@ namespace Player
             }
         }
 
+        private void Glide(float iHorz, float iVert)
+        {
+            //Rotate player towards the target pitch angle\
+            GlidePitch();
+
+            if(braking) {
+                rb.AddForce(Vector3.down * glideBreakAcceleration, ForceMode.Acceleration);
+            }
+            else {
+                //Create glide vector by rotating the forward vector by the pitch to apply force in the direction of the pitch
+                Vector3 glideVec = (Quaternion.AngleAxis(eulerAngles.x, transform.right) * transform.forward).normalized;
+                Debug.DrawRay(transform.position, glideVec, Color.magenta);
+
+                rb.AddForce(glideVec * glideAcceleration, ForceMode.Acceleration);
+                if (rb.velocity.magnitude > maxGlideSpeed)
+                {
+                    rb.AddForce(rb.velocity.normalized * naturalDeceleration, ForceMode.Acceleration);
+                }
+            }
+
+
+        }
+
+        private void GlidePitch()
+        {
+            float angleX = eulerAngles.x;
+            if(angleX > 180) {
+                angleX -= 360;
+            }
+
+            angleX = Mathf.Lerp(angleX, targetPitch, Time.fixedDeltaTime * pitchRate);
+            eulerAngles.x = Mathf.Clamp(angleX, MIN_PITCH, MAX_PITCH);
+        }
+
+        private void CheckGrounded()
+        {
+            isGrounded = Physics.Raycast(transform.position, Vector3.down, GROUNDED_CHECK_DIST);
+            Debug.DrawRay(transform.position, Vector3.down * GROUNDED_CHECK_DIST, isGrounded ? Color.red : Color.yellow);
+        }
+
         private void LockZRotation()
         {
-            rb.rotation = Quaternion.Euler(rb.rotation.eulerAngles.x, rb.rotation.eulerAngles.y, 0);
+            eulerAngles.z = 0;
+        }
+        private Vector3 GetEulerAngles()
+        {
+            return rb.rotation.eulerAngles;
+        }
+
+        private float CalculateTargetPitch(float iVert) 
+        {
+            if(braking)
+                return 0;
+            else 
+                return Mathf.Lerp(0, iVert > 0 ? MAX_PITCH : MIN_PITCH, Mathf.Abs(iVert));    
+        }
+
+        private void ApplyRotation()
+        {
+            rb.rotation = Quaternion.Euler(eulerAngles);
         }
 
         private float GetMaxCentripetalAcceleration()
@@ -158,17 +239,22 @@ namespace Player
             return Mathf.Sqrt(Mathf.Abs(centripetalAccelMag) / turnRadius);
         }
 
+
         #endregion
 
 
         #region public Ability methods
+        
+        [Server]        
         public void Boost()
         {
-            boosting = true;
-            if (boostTimer != null)
-                StopCoroutine(boostTimer);
-            boostTimer = BoostTimer();
-            StartCoroutine(boostTimer);
+            if(isGrounded) {
+                boosting = true;
+                if (boostTimer != null)
+                    StopCoroutine(boostTimer);
+                boostTimer = BoostTimer();
+                StartCoroutine(boostTimer);
+            }
         }
         private IEnumerator BoostTimer()
         {
@@ -176,6 +262,8 @@ namespace Player
             boosting = false;
             charge = 0;
         }
+
+        [Server]        
         public void Brake()
         {
             braking = true;
@@ -184,6 +272,7 @@ namespace Player
                 StopCoroutine(boostTimer);
         }
 
+        [Server]        
         public void StopBraking()
         {
             braking = false;
@@ -246,10 +335,12 @@ namespace Player
             {
                 if (!p.isServer) return;
                 GUIStyle bigStyle = new GUIStyle();
-                bigStyle.fontSize = 24;
+                bigStyle.fontSize = 12;
                 bigStyle.fontStyle = FontStyle.Bold;
-                GUI.Label(new Rect(800, 600, 100, 20), string.Format("Speed: {0}", rb.velocity.magnitude), bigStyle);
+                GUI.Label(new Rect(10, 30, 100, 20), string.Format("Speed: {0}", rb.velocity.magnitude), bigStyle);
                 GUI.Label(new Rect(10, 60, 100, 20), string.Format("Charge: {0}/{1}", charge, maxCharge), bigStyle);
+                GUI.Label(new Rect(10, 90, 100, 20), string.Format("Grounded: {0}", isGrounded), bigStyle);
+                GUI.Label(new Rect(10, 120, 100, 20), string.Format("Angle: {0}", eulerAngles), bigStyle);
             }
         }
 
