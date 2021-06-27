@@ -8,6 +8,7 @@ namespace Player
     public class PlayerPhysics : MonoBehaviour, IReceivePowerUpPatches
     {
         public PlayerController p;
+        public Suspension frontSuspension;
         [SerializeField] Rigidbody rb;
         [SerializeField] Transform localBasisVectors;
         [SerializeField] GlidePointer glidePointer;
@@ -16,8 +17,10 @@ namespace Player
         [Header("Movement properties")]
         public float acceleration;
         public float brakingAcceleration;
+        public float brakingTurnAcceleration;
         public float topSpeed;
         public float turnRadius;
+        public float turnSpeed;
         public float boostDuration;
         public float boostAcceleration;
         public float boostTopSpeed;
@@ -26,14 +29,12 @@ namespace Player
         public float glideBreakAcceleration;
         public float maxGlideSpeed;
         public float pitchRate;
-        public float GROUNDED_CHECK_DIST;
         public float MIN_PITCH, MAX_PITCH;
         public float LOW_SPEED_TURN_THRESHOLD;
         #endregion
 
         #region Local state
         private bool braking;
-        private bool isGrounded;
         private float charge;
         public float chargeRate, maxCharge;
         private bool boosting;
@@ -73,8 +74,11 @@ namespace Player
             targetPitch = CalculateTargetPitch(p.iVert);
             glidePointer.RotatePointer(targetPitch);
 
-            CheckGrounded();
-            if(!isGrounded) {
+            //Rotate player towards the target pitch angle
+            GlidePitch();
+
+            //Only check front suspension for grounded. We should fly if the front of the vehicle is off the ground
+            if(!frontSuspension.IsGrounded()) {
                 Glide(p.iHorz, p.iVert);
             }
 
@@ -106,9 +110,17 @@ namespace Player
 
             // Standard forward propulsion force
             Vector3 forwardAccel = localBasisVectors.forward * accelToUse;
-            if (braking && isGrounded)
+            if (braking && frontSuspension.IsGrounded())
             {
-                forwardAccel = rb.velocity.normalized * brakingAcceleration;
+                if(Mathf.Abs(iHorz) > 0) 
+                {
+                    forwardAccel = rb.velocity.normalized * brakingTurnAcceleration;
+                }
+                else
+                {
+                    forwardAccel = rb.velocity.normalized * brakingAcceleration;
+                }
+                
             }
 
             rb.AddForce(forwardAccel + centripetalAccel, ForceMode.Acceleration);
@@ -124,7 +136,7 @@ namespace Player
             rb.velocity = Vector3.ClampMagnitude(rb.velocity, boostTopSpeed);
 
             // Stop player when braking and at low velocity
-            if (braking && isGrounded)
+            if (braking && frontSuspension.IsGrounded())
             {
                 if (rb.velocity.sqrMagnitude < 0.1)
                 {
@@ -141,31 +153,37 @@ namespace Player
         /// <param name="iHorz"></param>
         private void RotateBody(float centripetalAccelMag, float iHorz)
         {
-            float angularSpeed = GetAngularSpeed(centripetalAccelMag);
-            float maxAngularSpeed = GetMaxAngularSpeed();
 
-            // Cap the turn rate by the normal top speed (ie. boosting doesn't make turning better)
-            if (angularSpeed > maxAngularSpeed)
-            {
-                rb.angularVelocity = localBasisVectors.up * maxAngularSpeed * Mathf.Sign(iHorz);
+            if(braking)
+            {  
+                float turnRate = GetTurnSpeed();
+                rb.angularVelocity = localBasisVectors.up * turnRate * iHorz;
             }
             else
             {
-                rb.angularVelocity = localBasisVectors.up * angularSpeed * Mathf.Sign(iHorz);
+                float angularSpeed = GetAngularSpeed(centripetalAccelMag);
+                float maxAngularSpeed = GetMaxAngularSpeed();
+                // Cap the turn rate by the normal top speed (ie. boosting doesn't make turning better)
+                if (angularSpeed > maxAngularSpeed)
+                {
+                    rb.angularVelocity = localBasisVectors.up * maxAngularSpeed * Mathf.Sign(iHorz);
+                }
+                else
+                {
+                    rb.angularVelocity = localBasisVectors.up * angularSpeed * Mathf.Sign(iHorz);
+                }
             }
 
             // At low speeds override the normal turn rate.
-            if (braking && rb.velocity.sqrMagnitude < (LOW_SPEED_TURN_THRESHOLD * LOW_SPEED_TURN_THRESHOLD))
-            {
-                rb.angularVelocity = localBasisVectors.up * maxAngularSpeed * iHorz;
-            }
+            // if (braking && rb.velocity.sqrMagnitude < (LOW_SPEED_TURN_THRESHOLD * LOW_SPEED_TURN_THRESHOLD))
+            // {
+            //     rb.angularVelocity = localBasisVectors.up * maxAngularSpeed * iHorz;
+            // }
         }
 
         private void Glide(float iHorz, float iVert)
-        {
-            //Rotate player towards the target pitch angle\
-            GlidePitch();
-
+        {            
+            //Move the player straight down if braking
             if(braking) {
                 rb.AddForce(Vector3.down * glideBreakAcceleration, ForceMode.Acceleration);
             }
@@ -187,6 +205,7 @@ namespace Player
         private void GlidePitch()
         {
             float angleX = eulerAngles.x;
+            //Convert to -180 to 180
             if(angleX > 180) {
                 angleX -= 360;
             }
@@ -194,13 +213,6 @@ namespace Player
             angleX = Mathf.Lerp(angleX, targetPitch, Time.fixedDeltaTime * pitchRate);
             eulerAngles.x = Mathf.Clamp(angleX, MIN_PITCH, MAX_PITCH);
         }
-
-        private void CheckGrounded()
-        {
-            isGrounded = Physics.Raycast(transform.position, Vector3.down, GROUNDED_CHECK_DIST);
-            Debug.DrawRay(transform.position, Vector3.down * GROUNDED_CHECK_DIST, isGrounded ? Color.red : Color.yellow);
-        }
-
         private void LockZRotation()
         {
             eulerAngles.z = 0;
@@ -239,6 +251,11 @@ namespace Player
             return Mathf.Sqrt(Mathf.Abs(centripetalAccelMag) / turnRadius);
         }
 
+        private float GetTurnSpeed()
+        {
+            return turnSpeed;
+        }
+
 
         #endregion
 
@@ -248,7 +265,7 @@ namespace Player
         [Server]        
         public void Boost()
         {
-            if(isGrounded) {
+            if(frontSuspension.IsGrounded()) {
                 boosting = true;
                 if (boostTimer != null)
                     StopCoroutine(boostTimer);
@@ -339,7 +356,7 @@ namespace Player
                 bigStyle.fontStyle = FontStyle.Bold;
                 GUI.Label(new Rect(10, 30, 100, 20), string.Format("Speed: {0}", rb.velocity.magnitude), bigStyle);
                 GUI.Label(new Rect(10, 60, 100, 20), string.Format("Charge: {0}/{1}", charge, maxCharge), bigStyle);
-                GUI.Label(new Rect(10, 90, 100, 20), string.Format("Grounded: {0}", isGrounded), bigStyle);
+                GUI.Label(new Rect(10, 90, 100, 20), string.Format("Grounded: {0}", frontSuspension.IsGrounded()), bigStyle);
                 GUI.Label(new Rect(10, 120, 100, 20), string.Format("Angle: {0}", eulerAngles), bigStyle);
             }
         }

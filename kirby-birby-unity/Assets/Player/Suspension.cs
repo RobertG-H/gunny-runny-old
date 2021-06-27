@@ -31,12 +31,13 @@ namespace Player
         [Header("Wheel")]
         [SerializeField] float wheelRadius;
 
+        private bool isGrounded;
+
         void Awake()
         {
             minLength = restLength - springTravel;
             maxLength = restLength + springTravel;
         }
-
         void FixedUpdate()
         {
             if (!networkParent.isServer) return;
@@ -56,9 +57,18 @@ namespace Player
 
                 rb.AddForceAtPosition(suspensionForce, hit.point);
                 Debug.DrawRay(transform.position, -localBasisVectors.up * (hit.distance), Color.red);
-
+                isGrounded = true;
+            }
+            else 
+            {
+                isGrounded = false;
             }
 
+        }
+
+        public bool IsGrounded()
+        {
+            return isGrounded;
         }
     }
 }
